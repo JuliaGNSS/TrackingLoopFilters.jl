@@ -1,14 +1,6 @@
 
     using StaticArrays, LinearAlgebra
     import Unitful: MHz, kHz, Hz, s, ms, upreferred
-
-
-  
-
-
-
-
-
   
 
 include("FilterStructs.jl")
