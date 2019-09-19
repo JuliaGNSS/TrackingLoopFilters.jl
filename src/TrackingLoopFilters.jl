@@ -8,7 +8,10 @@ module TrackingLoopFilters
     include("FilterStructs.jl")
 
 
-    function loop_filter(state::T, δθ, Δt, bandwidth) where T<:AbstractLoopFilter
+    """
+    #
+    """
+    function loop_filter(state::AbstractLoopFilter, δθ, Δt, bandwidth)
         ω₀ = Float64(bandwidth / Hz) * 4.0
         Δt_sec = Float64(upreferred(Δt/s))
         propagate(state, δθ, Δt_sec, bandwidth)
