@@ -7,7 +7,7 @@ $(SIGNATURES)
 
 
 Uses the current state, the discriminator output 'δθ', the loop update time interval 'Δt' 
-and the loop bandwidth 'bandwidth' to set up the 'F' and 'L' (Transition Matrix and Filter gain Matrix)
+and the loop bandwidth `bandwidth` to set up the 'F' and 'L' (Transition Matrix and Filter gain Matrix)
 matrices to calculate the initial state vector 'x' and create a new object
 of the same type with new state
 """
