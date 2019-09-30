@@ -2,22 +2,23 @@ using StaticArrays
 
 abstract type AbstractLoopFilter end
 
-struct FirstOrderLF <: AbstractLoopFilter   
+mutable struct FirstOrderLF <: AbstractLoopFilter
+    x::Float64   
 end
 
-struct SecondOrderBilinearLF <: AbstractLoopFilter
+mutable struct SecondOrderBilinearLF <: AbstractLoopFilter
     x::Float64
 end
 
-struct SecondOrderBoxcarLF <: AbstractLoopFilter
+mutable struct SecondOrderBoxcarLF <: AbstractLoopFilter
     x::Float64
 end
 
 
-struct ThirdOrderBilinearLF <: AbstractLoopFilter
+mutable struct ThirdOrderBilinearLF <: AbstractLoopFilter
     x::SVector{2, Float64}
 end
 
-struct ThirdOrderBoxcarLF <: AbstractLoopFilter
+mutable struct ThirdOrderBoxcarLF <: AbstractLoopFilter
     x::SVector{2, Float64}
 end
