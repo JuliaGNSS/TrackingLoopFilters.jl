@@ -13,12 +13,8 @@ module TrackingLoopFilters
     function loop_filter(state::AbstractLoopFilter, δθ, Δt, bandwidth)
         ω₀ = Float64(bandwidth / Hz) * 4.0
         Δt_sec = Float64(upreferred(Δt/s))
-        #print("old state: ", state.x)
-        out = filtered_output(state, δθ, Δt_sec, bandwidth) * Hz
-        
+        out = filtered_output(state, δθ, Δt_sec, bandwidth) * Hz 
         state.x = propagate(state, δθ, Δt_sec, bandwidth).x
-        
-
         out
     end
 
