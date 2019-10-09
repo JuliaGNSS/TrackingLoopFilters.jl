@@ -1,8 +1,11 @@
-mutable struct SecondOrderBilinearLF <: AbstractLoopFilter
+
+abstract type AbstractSecondOrderLF <: AbstractLoopFilter end
+
+struct SecondOrderBilinearLF <: AbstractSecondOrderLF
     x::Float64
 end
 
-mutable struct SecondOrderBoxcarLF <: AbstractLoopFilter
+struct SecondOrderBoxcarLF <: AbstractSecondOrderLF
     x::Float64
 end
 
@@ -19,23 +22,16 @@ function propagate(state::SecondOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀ = Float64(bandwidth/Hz) * 1.89
     F = 1.0
     L = Δt * ω₀^2
-    SecondOrderBoxcarLF(F * state.x + L * δθ)
+
+    if typeof(state) == SecondOrderBoxcarLF
+        return SecondOrderBoxcarLF(F * state.x + L * δθ)
+
+    elseif typeof(state) == SecondOrderBilinearLF
+        return SecondOrderBilinearLF(F * state.x + L * δθ)
+
+    end
 end
 
-"""
-$(SIGNATURES)
-
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt` 
-and the loop bandwidth `bandwidth` to set up the `F` and `L` (Transition Matrix and Filter gain Matrix)
-matrices to calculate the initial state vector `x` and create a new object
-of the same type with new state
-"""
-function propagate(state::SecondOrderBilinearLF, δθ, Δt, bandwidth)
-    ω₀ = Float64(bandwidth/Hz) * 1.89
-    F = 1.0
-    L = Δt * ω₀^2
-    SecondOrderBilinearLF(F * state.x + L * δθ)
-end
 
 
 
@@ -57,7 +53,7 @@ end
 """
 $(SIGNATURES)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt` 
+Uses the current state, the discriminator output `δθ`, the loop update time interval in seconds `Δt` 
 and the loop bandwidth `bandwidth` to set up the `C` and `D` (Transition Matrix and Filter gain Matrix)
 matrices to calculate the the system output
 """ 

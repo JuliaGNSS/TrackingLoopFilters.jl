@@ -1,8 +1,11 @@
-mutable struct ThirdOrderBilinearLF <: AbstractLoopFilter
+
+abstract type AbstractThirdOrderLF <: AbstractLoopFilter end
+
+struct ThirdOrderBilinearLF <: AbstractThirdOrderLF
     x::SVector{2, Float64}
 end
 
-mutable struct ThirdOrderBoxcarLF <: AbstractLoopFilter
+struct ThirdOrderBoxcarLF <: AbstractThirdOrderLF
     x::SVector{2, Float64}
 end
 
@@ -15,26 +18,18 @@ and the loop bandwidth `bandwidth` to set up the `F` and `L` (Transition Matrix 
 matrices to calculate the initial state vector `x` and create a new object
 of the same type with new state
 """
-function propagate(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
+function propagate(state::AbstractThirdOrderLF, δθ, Δt, bandwidth)
     ω₀ = Float64(bandwidth/Hz) * 1.2
     F = @SMatrix [1.0 Δt; 0.0 1.0]
     L = @SVector [Δt * 1.1 * ω₀^2, Δt * ω₀^3]
-    ThirdOrderBoxcarLF(F * state.x + L * δθ)
-end
 
-"""
-$(SIGNATURES)
+    if typeof(state) == ThirdOrderBoxcarLF
+        return ThirdOrderBoxcarLF(F * state.x + L * δθ)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt` 
-and the loop bandwidth `bandwidth` to set up the `F` and `L` (Transition Matrix and Filter gain Matrix)
-matrices to calculate the initial state vector `x` and create a new object
-of the same type with new state
-"""
-function propagate(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
-    ω₀ = Float64(bandwidth/Hz) * 1.2
-    F =  @SMatrix [1.0 Δt; 0.0 1.0]
-    L =  @SVector [Δt * 1.1 * ω₀^2, Δt * ω₀^3]
-    ThirdOrderBilinearLF(F * state.x + L * δθ)
+    elseif typeof(state) == ThirdOrderBilinearLF
+        return ThirdOrderBilinearLF(F * state.x + L * δθ)
+
+    end
 end
 
 
