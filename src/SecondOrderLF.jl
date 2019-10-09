@@ -1,3 +1,12 @@
+mutable struct SecondOrderBilinearLF <: AbstractLoopFilter
+    x::Float64
+end
+
+mutable struct SecondOrderBoxcarLF <: AbstractLoopFilter
+    x::Float64
+end
+
+
 """
 $(SIGNATURES)
 

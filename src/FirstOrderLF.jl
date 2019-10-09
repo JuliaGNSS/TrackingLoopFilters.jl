@@ -1,3 +1,7 @@
+mutable struct FirstOrderLF <: AbstractLoopFilter
+    x::Float64   
+end
+
 """
 $(SIGNATURES)
 

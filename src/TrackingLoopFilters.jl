@@ -5,8 +5,13 @@ module TrackingLoopFilters
     using StaticArrays
 
     import Unitful: MHz, kHz, Hz, s, ms, upreferred
+
+
+    abstract type AbstractLoopFilter end
     
-    include("FilterStructs.jl")
+    include("FirstOrderLF.jl")
+    include("SecondOrderLF.jl")
+    include("ThirdOrderLF.jl") 
 
     function loop_filter(state::AbstractLoopFilter, δθ, Δt, bandwidth)
         ω₀ = Float64(bandwidth / Hz) * 4.0
@@ -17,9 +22,7 @@ module TrackingLoopFilters
     end
 
 
-    include("FirstOrderLF.jl")
-    include("SecondOrderLF.jl")
-    include("ThirdOrderLF.jl") 
+    
     
 end
 
