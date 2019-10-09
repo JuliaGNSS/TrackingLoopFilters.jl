@@ -1,6 +1,9 @@
 module TrackingLoopFilters
 
-    using StaticArrays, Unitful, DocStringExtensions
+    using DocStringExtensions
+    using LinearAlgebra
+    using StaticArrays
+
     import Unitful: MHz, kHz, Hz, s, ms, upreferred
     
     include("FilterStructs.jl")

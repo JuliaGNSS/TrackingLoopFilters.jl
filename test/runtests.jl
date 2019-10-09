@@ -1,10 +1,10 @@
 
-include("..//src//TrackingLoopFilters.jl")
-using Test, LinearAlgebra
+using LinearAlgebra
+using Test
 
 
 import Unitful: MHz, kHz, Hz, s, ms
-import .TrackingLoopFilters: FirstOrderLF, SecondOrderBoxcarLF, SecondOrderBilinearLF, ThirdOrderBoxcarLF, ThirdOrderBilinearLF, loop_filter
+import TrackingLoopFilters: FirstOrderLF, SecondOrderBoxcarLF, SecondOrderBilinearLF, ThirdOrderBoxcarLF, ThirdOrderBilinearLF, loop_filter
 
 
 @testset "First Order Loop Filter" begin

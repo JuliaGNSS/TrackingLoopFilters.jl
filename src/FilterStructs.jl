@@ -1,6 +1,5 @@
-using StaticArrays
 
-abstract type AbstractLoopFilter end
+abstract type   AbstractLoopFilter end
 
 mutable struct FirstOrderLF <: AbstractLoopFilter
     x::Float64   
