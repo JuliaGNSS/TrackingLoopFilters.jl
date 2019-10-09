@@ -8,8 +8,8 @@ import .TrackingLoopFilters: FirstOrderLF, SecondOrderBoxcarLF, SecondOrderBilin
 
 
 @testset "First Order Loop Filter" begin
-    bandwidth = 1Hz
-    FrstOrdLF = FirstOrderLF(0)
+    bandwidth   =   1Hz
+    FrstOrdLF   =   FirstOrderLF(0)
     out = loop_filter(FrstOrdLF, 1.0, 2s, bandwidth)
     @test out == 4Hz
     out = loop_filter(FrstOrdLF, 2.0, 2s, bandwidth)

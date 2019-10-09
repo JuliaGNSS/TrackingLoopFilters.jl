@@ -16,8 +16,6 @@ function propagate(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀ = Float64(bandwidth/Hz) * 1.2
     F = @SMatrix [1.0 Δt; 0.0 1.0]
     L = @SVector [Δt * 1.1 * ω₀^2, Δt * ω₀^3]
-
-    println(F, state.x, L, δθ)
     ThirdOrderBoxcarLF(F * state.x + L * δθ)
 end
 
@@ -50,7 +48,7 @@ Uses the current state, the discriminator output 'δθ', the loop update time in
 and the loop bandwidth 'bandwidth' to set up the 'C' and 'D' (Transition Matrix and Filter gain Matrix)
 matrices to calculate the the system output
 """    
-function filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
+function get_filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
     ω₀= Float64(bandwidth/Hz) * 1.2
     C = @SVector [1.0, Δt / 2]
     D = 2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4
@@ -67,7 +65,7 @@ Uses the current state, the discriminator output 'δθ', the loop update time in
 and the loop bandwidth 'bandwidth' to set up the 'C' and 'D' (Transition Matrix and Filter gain Matrix)
 matrices to calculate the the system output
 """ 
-function filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
+function get_filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀= Float64(bandwidth/Hz) * 1.2
     C = @SVector [1.0, 0.0]
     D = 2.4 * ω₀

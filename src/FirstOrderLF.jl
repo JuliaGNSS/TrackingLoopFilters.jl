@@ -23,7 +23,7 @@ to calculate dthe product of ω₀ and δθ as system output
 """
 
 
-function filtered_output(state::FirstOrderLF, δθ, Δt, bandwidth)
+function get_filtered_output(state::FirstOrderLF, δθ, Δt, bandwidth)
    
     ω₀ = Float64(bandwidth/Hz) * 4.0
     ω₀ * δθ

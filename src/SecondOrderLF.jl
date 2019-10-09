@@ -46,7 +46,7 @@ Uses the current state, the discriminator output 'δθ', the loop update time in
 and the loop bandwidth 'bandwidth' to set up the 'C' and 'D' (Transition Matrix and Filter gain Matrix)
 matrices to calculate the the system output
 """ 
-function filtered_output(state::SecondOrderBilinearLF, δθ, Δt, bandwidth)
+function get_filtered_output(state::SecondOrderBilinearLF, δθ, Δt, bandwidth)
     ω₀=Float64(bandwidth/Hz) * 1.89
     C = 1.0
     D = sqrt(2) * ω₀ + ω₀^2 * Δt / 2
@@ -61,7 +61,7 @@ Uses the current state, the discriminator output 'δθ', the loop update time in
 and the loop bandwidth 'bandwidth' to set up the 'C' and 'D' (Transition Matrix and Filter gain Matrix)
 matrices to calculate the the system output
 """ 
-function filtered_output(state::SecondOrderBoxcarLF, δθ, Δt, bandwidth)
+function get_filtered_output(state::SecondOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀= Float64(bandwidth/Hz) * 1.89
     C = 1.0 
     D = sqrt(2) * ω₀
