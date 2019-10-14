@@ -20,6 +20,7 @@ of the same type with new state
 """
 function propagate(state::AbstractThirdOrderLF, δθ, Δt, bandwidth)
     ω₀ = Float64(bandwidth/Hz) * 1.2
+    Δt = Δt/s
     F = @SMatrix [1.0 Δt; 0.0 1.0]
     L = @SVector [Δt * 1.1 * ω₀^2, Δt * ω₀^3]
 
@@ -45,9 +46,10 @@ matrices to calculate the the system output
 """    
 function get_filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
     ω₀= Float64(bandwidth/Hz) * 1.2
+    Δt = Δt/s
     C = @SVector [1.0, Δt / 2]
     D = 2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4
-    dot(C , state.x) + D * δθ
+    (dot(C , state.x) + D * δθ) * Hz
 end
 
 """
@@ -59,9 +61,10 @@ matrices to calculate the the system output
 """ 
 function get_filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀= Float64(bandwidth/Hz) * 1.2
+    Δt = Δt/s
     C = @SVector [1.0, 0.0]
     D = 2.4 * ω₀
-    dot(C , state.x) + D * δθ
+    (dot(C , state.x) + D * δθ) * Hz
 end  
 
 
