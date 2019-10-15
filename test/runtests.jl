@@ -90,5 +90,9 @@ end
 
     out = get_filtered_output(ThrdOrdBiLF, 2.0, 2s, bandwidth)
     ThrdOrdBiLF = propagate(ThrdOrdBiLF, 2.0, 2s, bandwidth)
-    @test out == 8Hz
+    @test out == (24.8 + 2 * 17.2) * Hz
+
+    out = get_filtered_output(ThrdOrdBiLF, 3.0, 2s, bandwidth)
+    ThrdOrdBiLF = propagate(ThrdOrdBiLF, 3.0, 2s, bandwidth)
+    @test out ==  (106.4 + 3 * 17.2) * Hz
 end

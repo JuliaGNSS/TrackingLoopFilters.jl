@@ -24,12 +24,6 @@ module TrackingLoopFilters
     include("SecondOrderLF.jl")
     include("ThirdOrderLF.jl") 
 
-    #function loop_filter(state::AbstractLoopFilter, δθ, Δt, bandwidth)
-    #    Δt_sec = Float64(upreferred(Δt/s))
-    #    out = get_filtered_output(state, δθ, Δt_sec, bandwidth) * Hz 
-    #    state.x = propagate(state, δθ, Δt_sec, bandwidth).x
-    #    out
-    #end
 end
 
 
