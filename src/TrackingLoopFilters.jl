@@ -5,9 +5,6 @@ module TrackingLoopFilters
     using StaticArrays
 
     import Unitful: MHz, kHz, Hz, s, ms, upreferred
-
-
-
     export
         propagate,
         get_filtered_output,
@@ -16,7 +13,6 @@ module TrackingLoopFilters
         SecondOrderBoxcarLF,
         ThirdOrderBilinearLF,
         ThirdOrderBoxcarLF
-
 
     abstract type AbstractLoopFilter end
 

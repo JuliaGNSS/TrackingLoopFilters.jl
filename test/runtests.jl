@@ -8,8 +8,8 @@ import Unitful: MHz, kHz, Hz, s, ms
 
 
 @testset "First Order Loop Filter" begin
-    bandwidth   =   1Hz
-    FrstOrdLF   =   FirstOrderLF(0)
+    bandwidth = 1Hz
+    FrstOrdLF = FirstOrderLF()
 
     out = get_filtered_output(FrstOrdLF, 1.0, 2s, bandwidth)
     FrstOrdLF = propagate(FrstOrdLF, 1.0, 2s, bandwidth)
@@ -27,7 +27,7 @@ end
 
 @testset "Second Order Boxcar Loop Filter" begin
     bandwidth = 2Hz / 1.89
-    SecOrdBcLF = SecondOrderBoxcarLF(0)
+    SecOrdBcLF = SecondOrderBoxcarLF()
 
     out = get_filtered_output(SecOrdBcLF, 1.0, 2s, bandwidth)
     SecOrdBcLF = propagate(SecOrdBcLF, 1.0, 2s, bandwidth)
@@ -45,7 +45,7 @@ end
 
 @testset "Second Order Bilinear Loop Filter" begin
     bandwidth = 2Hz / 1.89
-    SecOrdBiLF = SecondOrderBilinearLF(0)
+    SecOrdBiLF = SecondOrderBilinearLF()
 
     out = get_filtered_output(SecOrdBiLF, 1.0, 2s, bandwidth)
     SecOrdBiLF = propagate(SecOrdBiLF, 1.0, 2s, bandwidth)
@@ -64,7 +64,7 @@ end
 
 @testset "Third Order Boxcar Loop Filter" begin
     bandwidth = 2Hz / 1.2
-    ThrdOrdBcLF = ThirdOrderBoxcarLF([0 ; 0])
+    ThrdOrdBcLF = ThirdOrderBoxcarLF()
 
     out = get_filtered_output(ThrdOrdBcLF, 1.0, 2s, bandwidth)
     ThrdOrdBcLF = propagate(ThrdOrdBcLF, 1.0, 2s, bandwidth)
@@ -82,7 +82,7 @@ end
 
 @testset "Third Order Bilinear Loop Filter" begin
     bandwidth = 2Hz / 1.2
-    ThrdOrdBiLF = ThirdOrderBilinearLF([0 ; 0])
+    ThrdOrdBiLF = ThirdOrderBilinearLF()
 
     out = get_filtered_output(ThrdOrdBiLF, 1.0, 2s, bandwidth)
     ThrdOrdBiLF = propagate(ThrdOrdBiLF, 1.0, 2s, bandwidth)

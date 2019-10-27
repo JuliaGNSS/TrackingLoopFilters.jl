@@ -9,6 +9,13 @@ struct ThirdOrderBoxcarLF <: AbstractThirdOrderLF
     x::SVector{2, Float64}
 end
 
+function ThirdOrderBilinearLF()
+    ThirdOrderBilinearLF(@SVector[0 , 0] )
+end
+
+function ThirdOrderBoxcarLF()
+    ThirdOrderBoxcarLF(@SVector[0 , 0])
+end
 
 """
 $(SIGNATURES)
@@ -18,19 +25,12 @@ and the loop bandwidth `bandwidth` to set up the `F` and `L` (Transition Matrix 
 matrices to calculate the initial state vector `x` and create a new object
 of the same type with new state
 """
-function propagate(state::AbstractThirdOrderLF, δθ, Δt, bandwidth)
+function propagate(state::T, δθ, Δt, bandwidth) where T<:AbstractThirdOrderLF
     ω₀ = Float64(bandwidth/Hz) * 1.2
     Δt = Δt/s
     F = @SMatrix [1.0 Δt; 0.0 1.0]
     L = @SVector [Δt * 1.1 * ω₀^2, Δt * ω₀^3]
-
-    if typeof(state) == ThirdOrderBoxcarLF
-        return ThirdOrderBoxcarLF(F * state.x + L * δθ)
-
-    elseif typeof(state) == ThirdOrderBilinearLF
-        return ThirdOrderBilinearLF(F * state.x + L * δθ)
-
-    end
+    T(F * state.x + L * δθ)
 end
 
 

@@ -10,6 +10,16 @@ struct SecondOrderBoxcarLF <: AbstractSecondOrderLF
 end
 
 
+function SecondOrderBilinearLF()
+    SecondOrderBilinearLF(0)
+end
+
+function SecondOrderBoxcarLF()
+    SecondOrderBoxcarLF(0)
+end
+
+
+
 """
 $(SIGNATURES)
 
@@ -18,19 +28,12 @@ and the loop bandwidth `bandwidth` to set up the `F` and `L` (Transition Matrix 
 matrices to calculate the initial state vector `x` and create a new object
 of the same type with new state
 """
-function propagate(state::AbstractSecondOrderLF, δθ, Δt, bandwidth)
+function propagate(state::T, δθ, Δt, bandwidth) where T <: AbstractSecondOrderLF
     ω₀ = Float64(bandwidth/Hz) * 1.89
     Δt = Δt/s
     F = 1.0
     L = Δt * ω₀^2
-
-    if typeof(state) == SecondOrderBoxcarLF
-        return SecondOrderBoxcarLF(F * state.x + L * δθ)
-
-    elseif typeof(state) == SecondOrderBilinearLF
-        return SecondOrderBilinearLF(F * state.x + L * δθ)
-
-    end
+    T(F * state.x + L * δθ)
 end
 
 

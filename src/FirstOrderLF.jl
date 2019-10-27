@@ -1,7 +1,7 @@
 abstract type AbstractFirstOrderLF <: AbstractLoopFilter end
 
 struct FirstOrderLF <: AbstractFirstOrderLF
-    x::Float64   
+    
 end
 
 """
