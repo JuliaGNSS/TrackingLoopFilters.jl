@@ -1,36 +1,35 @@
 
 abstract type AbstractThirdOrderLF <: AbstractLoopFilter end
 
-struct ThirdOrderBilinearLF <: AbstractThirdOrderLF
-    x::SVector{2, Float64}
+struct ThirdOrderBilinearLF{T1,T2} <: AbstractThirdOrderLF
+    x1::T1
+    x2::T2
 end
 
-struct ThirdOrderBoxcarLF <: AbstractThirdOrderLF
-    x::SVector{2, Float64}
+struct ThirdOrderBoxcarLF{T1,T2} <: AbstractThirdOrderLF
+    x1::T1
+    x2::T2
 end
 
 function ThirdOrderBilinearLF()
-    ThirdOrderBilinearLF(@SVector[0 , 0] )
+    ThirdOrderBilinearLF(0.0Hz, 0.0Hz^2)
 end
 
 function ThirdOrderBoxcarLF()
-    ThirdOrderBoxcarLF(@SVector[0 , 0])
+    ThirdOrderBoxcarLF(0.0Hz, 0.0Hz^2)
 end
 
 """
 $(SIGNATURES)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt` 
+Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt`
 and the loop bandwidth `bandwidth` to set up the `F` and `L` (Transition Matrix and Filter gain Matrix)
 matrices to calculate the initial state vector `x` and create a new object
 of the same type with new state
 """
-function propagate(state::T, δθ, Δt, bandwidth) where T<:AbstractThirdOrderLF
-    ω₀ = Float64(bandwidth/Hz) * 1.2
-    Δt = Δt/s
-    F = @SMatrix [1.0 Δt; 0.0 1.0]
-    L = @SVector [Δt * 1.1 * ω₀^2, Δt * ω₀^3]
-    T(F * state.x + L * δθ)
+function propagate(state::T, δθ, Δt, bandwidth) where T <: AbstractThirdOrderLF
+    ω₀ = bandwidth * 1.2
+    T(state.x1 + Δt * state.x2 + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δt * ω₀^3 * δθ)
 end
 
 
@@ -40,31 +39,23 @@ end
 """
 $(SIGNATURES)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt` 
+Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt`
 and the loop bandwidth `bandwidth` to set up the `C` and `D` (Transition Matrix and Filter gain Matrix)
 matrices to calculate the the system output
-"""    
+"""
 function get_filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
-    ω₀= Float64(bandwidth/Hz) * 1.2
-    Δt = Δt/s
-    C = @SVector [1.0, Δt / 2]
-    D = 2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4
-    (dot(C , state.x) + D * δθ) * Hz
+    ω₀= bandwidth * 1.2
+    state.x1 + Δt / 2 * state.x2 + (2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4) * δθ
 end
 
 """
 $(SIGNATURES)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt` 
+Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt`
 and the loop bandwidth `bandwidth` to set up the `C` and `D` (Transition Matrix and Filter gain Matrix)
 matrices to calculate the the system output
-""" 
+"""
 function get_filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
-    ω₀= Float64(bandwidth/Hz) * 1.2
-    Δt = Δt/s
-    C = @SVector [1.0, 0.0]
-    D = 2.4 * ω₀
-    (dot(C , state.x) + D * δθ) * Hz
-end  
-
-
+    ω₀= bandwidth * 1.2
+    state.x1 + 2.4 * ω₀ * δθ
+end

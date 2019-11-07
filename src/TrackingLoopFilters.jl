@@ -2,42 +2,29 @@ module TrackingLoopFilters
 
     using DocStringExtensions
     using LinearAlgebra
-    using StaticArrays
+    using Unitful: Hz
 
-    import Unitful: MHz, kHz, Hz, s, ms, upreferred
     export
         propagate,
         get_filtered_output,
+        filter_loop,
         FirstOrderLF,
         SecondOrderBilinearLF,
         SecondOrderBoxcarLF,
         ThirdOrderBilinearLF,
-        ThirdOrderBoxcarLF
+        ThirdOrderBoxcarLF,
+        AbstractLoopFilter
 
     abstract type AbstractLoopFilter end
 
     include("FirstOrderLF.jl")
     include("SecondOrderLF.jl")
-    include("ThirdOrderLF.jl") 
+    include("ThirdOrderLF.jl")
+
+    function filter_loop(state::T, δθ, Δt, bandwidth) where T <: AbstractLoopFilter
+        next_state = propagate(state, δθ, Δt, bandwidth)
+        output = get_filtered_output(next_state, δθ, Δt, bandwidth)
+        output, next_state
+    end
 
 end
-
-
-
-
-
-
-
-
- 
-
-
-
-
-    
-
-
-
-
-
-
