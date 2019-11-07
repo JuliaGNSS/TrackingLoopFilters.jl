@@ -6,7 +6,7 @@ end
 """
 $(SIGNATURES)
 
-returns the state again.
+Propagates the state of the loop filter.
 """
 function propagate(state::FirstOrderLF, δθ, Δt, bandwidth)
     state
@@ -15,8 +15,7 @@ end
 """
 $(SIGNATURES)
 
-Uses the discriminator output `δθ` and the loop bandwidth `bandwidth`
-to calculate dthe product of ω₀ and δθ as system output
+Calculates the filter output.
 """
 function get_filtered_output(state::FirstOrderLF, δθ, Δt, bandwidth)
     ω₀ = bandwidth * 4.0

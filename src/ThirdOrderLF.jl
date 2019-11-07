@@ -22,26 +22,17 @@ end
 """
 $(SIGNATURES)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt`
-and the loop bandwidth `bandwidth` to set up the `F` and `L` (Transition Matrix and Filter gain Matrix)
-matrices to calculate the initial state vector `x` and create a new object
-of the same type with new state
+Propagates the state of the loop filter.
 """
 function propagate(state::T, δθ, Δt, bandwidth) where T <: AbstractThirdOrderLF
     ω₀ = bandwidth * 1.2
     T(state.x1 + Δt * state.x2 + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δt * ω₀^3 * δθ)
 end
 
-
-
-
-
 """
 $(SIGNATURES)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt`
-and the loop bandwidth `bandwidth` to set up the `C` and `D` (Transition Matrix and Filter gain Matrix)
-matrices to calculate the the system output
+Calculates the filter output.
 """
 function get_filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
     ω₀= bandwidth * 1.2
@@ -51,9 +42,7 @@ end
 """
 $(SIGNATURES)
 
-Uses the current state, the discriminator output `δθ`, the loop update time interval `Δt`
-and the loop bandwidth `bandwidth` to set up the `C` and `D` (Transition Matrix and Filter gain Matrix)
-matrices to calculate the the system output
+Calculates the filter output.
 """
 function get_filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀= bandwidth * 1.2
