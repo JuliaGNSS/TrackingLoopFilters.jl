@@ -32,7 +32,7 @@ end
 """
 $(SIGNATURES)
 
-Calculates the filter output.
+Calculates the output of the loop filter.
 """
 function get_filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
     ω₀= bandwidth * 1.2
@@ -42,7 +42,7 @@ end
 """
 $(SIGNATURES)
 
-Calculates the filter output.
+Calculates the output of the loop filter.
 """
 function get_filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀= bandwidth * 1.2

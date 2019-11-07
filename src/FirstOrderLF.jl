@@ -15,7 +15,7 @@ end
 """
 $(SIGNATURES)
 
-Calculates the filter output.
+Calculates the output of the loop filter.
 """
 function get_filtered_output(state::FirstOrderLF, δθ, Δt, bandwidth)
     ω₀ = bandwidth * 4.0
