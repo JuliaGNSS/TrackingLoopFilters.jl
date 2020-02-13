@@ -1,7 +1,7 @@
 name = "TrackingLoopFilters"
 uuid = "0814aff9-93cb-554c-9fff-9bf1cfdb5efa"
 authors = ["Erik Deinzer <erik.deinzer@rwth-aachen.de>", "Soeren Zorn <soeren.zorn@nav.rwth-aachen.de"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -12,7 +12,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [compat]
 julia = "1"
 DocStringExtensions = "0.8"
-Unitful = "0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18"
+Unitful = "0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 1.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
