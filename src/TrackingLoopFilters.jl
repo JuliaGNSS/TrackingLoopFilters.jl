@@ -12,6 +12,7 @@ module TrackingLoopFilters
         SecondOrderBilinearLF,
         SecondOrderBoxcarLF,
         ThirdOrderBilinearLF,
+        ThirdOrderAssistedBilinearLF,
         ThirdOrderBoxcarLF,
         AbstractLoopFilter
 
