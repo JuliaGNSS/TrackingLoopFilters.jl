@@ -1,26 +1,22 @@
-[![Build Status](https://travis-ci.org/JuliaGNSS/TrackingLoopFilters.jl.svg?branch=master)](https://travis-ci.org/JuliaGNSS/TrackingLoopFilters.jl)
-[![Coverage Status](https://coveralls.io/repos/github/JuliaGNSS/TrackingLoopFilters.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaGNSS/TrackingLoopFilters.jl?branch=master)
+# TrackingLoopFilters.jl
 
-# TrackingLoopFilters
-This implements multiple loop filters for GNSS tracking algorithms.
+[![Build Status](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/JuliaGNSS/TrackingLoopFilters.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGNSS/TrackingLoopFilters.jl)
+[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliagnss.github.io/TrackingLoopFilters.jl/stable)
+[![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliagnss.github.io/TrackingLoopFilters.jl/dev)
 
-## Features
+Loop filters for GNSS tracking algorithms.
 
-* First, second and third order loop filters
-* Boxcar and bilinear loop filters
+## Installation
 
-## Getting started
-
-Install:
 ```julia
-julia> ]
 pkg> add TrackingLoopFilters
 ```
 
-## Usage
+## Documentation
 
-```julia
-using TrackingLoopFilters
-carrier_loop_filter = ThirdOrderBilinearLF()
-output, next_carrier_loop_filter = filter_loop(carrier_loop_filter, discriminator_output, Δt, bandwidth)
-```
+See the [documentation](https://juliagnss.github.io/TrackingLoopFilters.jl/stable) for API reference.
+
+## License
+
+MIT

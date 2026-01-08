@@ -1,8 +1,13 @@
+using Aqua
 using LinearAlgebra
 using Test
 using TrackingLoopFilters
 
 import Unitful: Hz, s
+
+@testset "Aqua" begin
+    Aqua.test_all(TrackingLoopFilters)
+end
 
 @testset "First Order Loop Filter" begin
     bandwidth = 1Hz
