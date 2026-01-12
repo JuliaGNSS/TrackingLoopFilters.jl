@@ -1,7 +1,7 @@
 name = "TrackingLoopFilters"
 uuid = "0814aff9-93cb-554c-9fff-9bf1cfdb5efa"
 authors = ["Erik Deinzer <erik.deinzer@rwth-aachen.de>", "Soeren Zorn <soeren.zorn@nav.rwth-aachen.de"]
-version = "0.2.0"
+version = "1.0.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
