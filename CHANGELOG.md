@@ -1,5 +1,7 @@
 # Changelog
 
+# [2.0.0](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/compare/v1.0.0...v2.0.0) (2026-09-29)
+
 # [0.2.0](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/compare/v0.1.2...v0.2.0) (2025-12-18)
 
 
