@@ -1,6 +1,8 @@
 # Changelog
 
-# [2.0.0](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/compare/v1.0.0...v2.0.0) (2026-09-29)
+## [1.0.1](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/compare/v1.0.0...v1.0.1) (2026-09-30)
+
+No changes to the package. Replaces the accidental 2.0.0 release.
 
 # [0.2.0](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/compare/v0.1.2...v0.2.0) (2025-12-18)
 
