@@ -113,6 +113,34 @@ end
     @test out == 167.61396103067892Hz
 end
 
+@testset "Third Order Assisted Bilinear Loop Filter with separate bandwidths" begin
+    Δt = 0.001s
+    δθ = (0.1, 2.0Hz)
+    # A pair whose low bandwidth matches the tied coupling reproduces the single bandwidth.
+    bandwidth = 18Hz
+    tied_low = bandwidth * 1.2 / 4 * 0.53
+    for (single, pair) in ((get_filtered_output, get_filtered_output), (propagate, propagate))
+        a = single(ThirdOrderAssistedBilinearLF(), δθ, Δt, bandwidth)
+        b = @inferred pair(ThirdOrderAssistedBilinearLF(), δθ, Δt, (bandwidth, tied_low))
+        @test all(isapprox.(a isa ThirdOrderAssistedBilinearLF ? (a.x1, a.x2) : (a,),
+            b isa ThirdOrderAssistedBilinearLF ? (b.x1, b.x2) : (b,); rtol = 1e-12))
+    end
+
+    # A zero low bandwidth is the unassisted third order filter.
+    assisted, plain = ThirdOrderAssistedBilinearLF(), ThirdOrderBilinearLF()
+    for k in 1:5
+        out_a, assisted = @inferred filter_loop(assisted, (0.01k, 3.0Hz), Δt, (10Hz, 0.0Hz))
+        out_p, plain = filter_loop(plain, 0.01k, Δt, 10Hz)
+        @test out_a ≈ out_p
+        @test assisted.x1 ≈ plain.x1 && assisted.x2 ≈ plain.x2
+    end
+
+    # The low bandwidth alone sets the frequency path: ω₀_assist = bandwidth_low / 0.53.
+    lf = propagate(ThirdOrderAssistedBilinearLF(), (0.0, 1.0Hz), 1s, (0.0Hz, 5.3Hz))
+    @test lf.x1 ≈ sqrt(2) * 10Hz * 1.0Hz * 1s
+    @test lf.x2 ≈ (10Hz)^2 * 1.0Hz * 1s
+end
+
 @testset "Filter" begin
     bandwidth = 1Hz
     loop_filter = @inferred FirstOrderLF()
