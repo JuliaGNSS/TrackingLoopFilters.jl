@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.1.0](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/compare/v1.0.1...v1.1.0) (2026-10-07)
+
+
+### Features
+
+* set the assisting loop's bandwidth of the assisted third order filter separately ([0257ab4](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/commit/0257ab49cc5c26a6c89af007fedfe7d62039b187))
+
 ## [1.0.1](https://github.com/JuliaGNSS/TrackingLoopFilters.jl/compare/v1.0.0...v1.0.1) (2026-09-30)
 
 No changes to the package. Replaces the accidental 2.0.0 release.
