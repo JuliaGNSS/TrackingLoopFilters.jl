@@ -4,3 +4,4 @@ TrackingLoopFilters = "0814aff9-93cb-554c-9fff-9bf1cfdb5efa"
 
 [compat]
 Documenter = "1"
+TrackingLoopFilters = "1.0.1"
