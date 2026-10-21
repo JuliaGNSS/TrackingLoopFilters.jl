@@ -51,6 +51,51 @@ module TrackingLoopFilters
     """
     $(SIGNATURES)
 
+    Propagate the loop filter state.
+
+    Calculate the output with [`get_filtered_output`](@ref) before propagating the state
+    with the same `δθ`, or use [`filter_loop`](@ref), which does both.
+
+    # Arguments
+    - `state`: Current loop filter state
+    - `δθ`: Phase discriminator output (dimensionless for standard filters, vector for assisted)
+    - `Δt`: Integration time
+    - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
+      `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
+
+    # Returns
+    New loop filter state.
+    """
+    function propagate(state::AbstractLoopFilter, δθ, Δt, bandwidth)
+        propagate_state(state, δθ, Δt, natural_frequency(state, bandwidth))
+    end
+
+    """
+    $(SIGNATURES)
+
+    Calculate the filtered output for the current loop filter state.
+
+    Calculate it before [`propagate`](@ref) propagates the state with the same `δθ`, as
+    [`filter_loop`](@ref) does. From the propagated state, the current `δθ` would be
+    integrated twice.
+
+    # Arguments
+    - `state`: Current loop filter state
+    - `δθ`: Phase discriminator output (dimensionless for standard filters, vector for assisted)
+    - `Δt`: Integration time
+    - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
+      `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
+
+    # Returns
+    Filtered frequency estimate.
+    """
+    function get_filtered_output(state::AbstractLoopFilter, δθ, Δt, bandwidth)
+        filtered_output(state, δθ, Δt, natural_frequency(state, bandwidth))
+    end
+
+    """
+    $(SIGNATURES)
+
     Propagate the loop filter state and return both the filtered output and next state.
 
     This is a convenience function that combines [`propagate`](@ref) and
@@ -69,8 +114,9 @@ module TrackingLoopFilters
     - `next_state`: Propagated loop filter state
     """
     function filter_loop(state::T, δθ, Δt, bandwidth) where T <: AbstractLoopFilter
-        output = get_filtered_output(state, δθ, Δt, bandwidth)
-        next_state = propagate(state, δθ, Δt, bandwidth)
+        ω₀ = natural_frequency(state, bandwidth)
+        output = filtered_output(state, δθ, Δt, ω₀)
+        next_state = propagate_state(state, δθ, Δt, ω₀)
         output, next_state
     end
 
