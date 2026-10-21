@@ -59,8 +59,11 @@ $(TYPEDEF)
 Third order bilinear loop filter with second order assistance.
 
 Combines a third order bilinear loop with a second order assisted loop
-for improved tracking performance. Accepts a two-element discriminator
-input vector `[δθ_high, δθ_low]`.
+for improved tracking performance. Accepts a `Tuple` `(δθ_high, δθ_low)` of the
+high and low order discriminator outputs: `δθ_high` is a phase error, as for
+[`ThirdOrderBilinearLF`](@ref), and `δθ_low` a frequency error in the units of
+the filter output, e.g. a PLL discriminator output in cycles and an FLL
+discriminator output in Hz (Kaplan & Hegarty, Figure 5.21(b)).
 
 The bandwidth is a `Tuple` `(bandwidth_high, bandwidth_low)` that sets each loop
 from its own noise bandwidth: `ω₀ = bandwidth_high / 0.7845` and
@@ -74,7 +77,7 @@ $(TYPEDFIELDS)
 # Example
 ```julia
 lf = ThirdOrderAssistedBilinearLF()
-output, next_lf = filter_loop(lf, [δθ_high, δθ_low], Δt, (bandwidth_high, bandwidth_low))
+output, next_lf = filter_loop(lf, (δθ_high, δθ_low), Δt, (bandwidth_high, bandwidth_low))
 ```
 """
 struct ThirdOrderAssistedBilinearLF{T1,T2} <: AbstractThirdOrderAssistedLF
@@ -192,7 +195,8 @@ of the frequency rate integrator (Kaplan & Hegarty, Figure 5.21(b)).
 
 # Arguments
 - `state`: Current loop filter state
-- `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
+- `δθ`: `Tuple` `(δθ_high, δθ_low)` of the phase and frequency discriminator outputs
+  (see [`ThirdOrderAssistedBilinearLF`](@ref))
 - `Δt`: Integration time
 - `natural_frequencies`: `Tuple` `(ω₀, ω₀_assist)` of the natural frequencies of the
   third order loop and the assisting second order loop
@@ -234,7 +238,8 @@ Combines outputs from the third order loop and second order assisted loop.
 
 # Arguments
 - `state`: Current loop filter state
-- `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
+- `δθ`: `Tuple` `(δθ_high, δθ_low)` of the phase and frequency discriminator outputs
+  (see [`ThirdOrderAssistedBilinearLF`](@ref))
 - `Δt`: Integration time
 - `natural_frequencies`: `Tuple` `(ω₀, ω₀_assist)` of the natural frequencies of the
   third order loop and the assisting second order loop

@@ -99,17 +99,17 @@ end
 @testset "Third Order Assisted Bilinear Loop Filter" begin
     bandwidth = (2Hz * 0.7845, 0.5Hz * 0.53)
     loop_filter = @inferred ThirdOrderAssistedBilinearLF()
-    
-    out = get_filtered_output(loop_filter, [1.0 1.0Hz], 2s, bandwidth)
-    loop_filter = @inferred propagate(loop_filter, [1.0 1.0Hz], 2s, bandwidth)
+
+    out = @inferred get_filtered_output(loop_filter, (1.0, 1.0Hz), 2s, bandwidth)
+    loop_filter = @inferred propagate(loop_filter, (1.0, 1.0Hz), 2s, bandwidth)
     @test out ≈ (17.2 + 0.9571067811865461)Hz
 
-    out = get_filtered_output(loop_filter, [2.0 2.0Hz], 2s, bandwidth)
-    loop_filter = @inferred propagate(loop_filter, [2.0 2.0Hz], 2s, bandwidth)
+    out = @inferred get_filtered_output(loop_filter, (2.0, 2.0Hz), 2s, bandwidth)
+    loop_filter = @inferred propagate(loop_filter, (2.0, 2.0Hz), 2s, bandwidth)
     @test out ≈ 79.52842712474619Hz
 
-    out = get_filtered_output(loop_filter, [3.0 3.0Hz], 2s, bandwidth)
-    loop_filter = @inferred propagate(loop_filter, [3.0 3.0Hz], 2s, bandwidth)
+    out = @inferred get_filtered_output(loop_filter, (3.0, 3.0Hz), 2s, bandwidth)
+    loop_filter = @inferred propagate(loop_filter, (3.0, 3.0Hz), 2s, bandwidth)
     @test out ≈ 217.1139610306789Hz
 end
 
