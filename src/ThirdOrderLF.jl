@@ -126,7 +126,9 @@ $(SIGNATURES)
 
 Propagate the third order boxcar loop filter state.
 
-Updates both frequency and frequency rate state estimates.
+Updates both frequency and frequency rate state estimates. The frequency state
+integrates the boxcar output `x2 + Δt * ω₀³ * δθ` of the frequency rate
+integrator, which includes the current `δθ` (Kaplan & Hegarty, Figure 5.19(b)).
 
 # Arguments
 - `state`: Current loop filter state
@@ -139,7 +141,8 @@ New loop filter state with updated estimates.
 """
 function propagate(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀ = bandwidth / 0.7845
-    ThirdOrderBoxcarLF(state.x1 + Δt * state.x2 + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δt * ω₀^3 * δθ)
+    x2_boxcar = state.x2 + Δt * ω₀^3 * δθ
+    ThirdOrderBoxcarLF(state.x1 + Δt * x2_boxcar + 1.1 * Δt * ω₀^2 * δθ, x2_boxcar)
 end
 
 """
@@ -243,6 +246,11 @@ $(SIGNATURES)
 
 Calculate the filtered output for the third order boxcar loop filter.
 
+Both integrators include the current `δθ` (Kaplan & Hegarty, Figure 5.19(b)).
+Calculate the output before [`propagate`](@ref) propagates the state with the same
+`δθ`, as [`filter_loop`](@ref) does. From the propagated state, the current `δθ`
+would be integrated twice.
+
 # Arguments
 - `state`: Current loop filter state
 - `δθ`: Phase discriminator output
@@ -254,5 +262,5 @@ Filtered frequency estimate.
 """
 function get_filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀ = bandwidth / 0.7845
-    state.x1 + 2.4 * ω₀ * δθ
+    state.x1 + Δt * state.x2 + (2.4 * ω₀ + 1.1 * ω₀^2 * Δt + ω₀^3 * Δt^2) * δθ
 end
