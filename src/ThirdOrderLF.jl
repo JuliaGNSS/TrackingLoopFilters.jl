@@ -46,23 +46,21 @@ $(TYPEDEF)
 
 Third order bilinear loop filter with second order assistance.
 
-Combines a third order bilinear loop with a second order assisted loop
-for improved tracking performance. Accepts a two-element discriminator
-input vector `[δθ_high, δθ_low]`.
+A third order bilinear loop assisted by a second order loop, e.g. an FLL-assisted PLL
+(Kaplan & Hegarty, Figure 5.21(b)). It takes a `Tuple` `(δθ_high, δθ_low)` of a phase
+error, as [`ThirdOrderBilinearLF`](@ref), and a frequency error in the units of the
+output, e.g. cycles and Hz.
 
-The bandwidth is a `Tuple` `(bandwidth_high, bandwidth_low)` that sets each loop
-from its own noise bandwidth: `ω₀ = bandwidth_high / 0.7845` and
-`ω₀_assist = bandwidth_low / 0.53`, from the third and second order loops'
-noise bandwidths `0.7845 · ω₀` and `0.53 · ω₀` (Kaplan & Hegarty, Table 5.6).
-In a frequency-assisted phase-locked loop this sets the PLL and the FLL
-bandwidths independently; `bandwidth_low = 0` turns the assistance off.
+The bandwidth is a `Tuple` `(bandwidth_high, bandwidth_low)` of the loops' noise
+bandwidths: `ω₀ = bandwidth_high / 0.7845` and `ω₀_assist = bandwidth_low / 0.53`
+(Kaplan & Hegarty, Table 5.6). `bandwidth_low = 0` turns the assistance off.
 
 $(TYPEDFIELDS)
 
 # Example
 ```julia
 lf = ThirdOrderAssistedBilinearLF()
-output, next_lf = filter_loop(lf, [δθ_high, δθ_low], Δt, (bandwidth_high, bandwidth_low))
+output, next_lf = filter_loop(lf, (δθ_high, δθ_low), Δt, (bandwidth_high, bandwidth_low))
 ```
 """
 struct ThirdOrderAssistedBilinearLF{T1,T2} <: AbstractThirdOrderAssistedLF
@@ -137,25 +135,8 @@ function propagate_state(state::ThirdOrderBilinearLF, δθ, Δt, ω₀)
     typeof(state)(state.x1 + Δt * x2_bilinear + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δx2)
 end
 
-"""
-$(SIGNATURES)
-
-Propagate the assisted third order loop filter state.
-
-Updates both frequency and frequency rate state estimates using
-dual discriminator inputs. The frequency state integrates the bilinear output
-of the frequency rate integrator (Kaplan & Hegarty, Figure 5.21(b)).
-
-# Arguments
-- `state`: Current loop filter state
-- `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
-- `Δt`: Integration time
-- `natural_frequencies`: `Tuple` `(ω₀, ω₀_assist)` of the natural frequencies of the
-  third order loop and the assisting second order loop
-
-# Returns
-New loop filter state with updated estimates.
-"""
+# As the bilinear filter, with the frequency path of the assisting loop (Kaplan & Hegarty,
+# Figure 5.21(b)).
 function propagate_state(state::T, δθ, Δt, natural_frequencies) where T <: AbstractThirdOrderAssistedLF
     ω₀, ω₀_assist = natural_frequencies
     Δx2 = Δt * ω₀^3 * δθ[1] + Δt * ω₀_assist^2 * δθ[2]
@@ -167,23 +148,6 @@ function filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, ω₀)
     state.x1 + Δt / 2 * state.x2 + (2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4) * δθ
 end
 
-"""
-$(SIGNATURES)
-
-Calculate the filtered output for the assisted third order bilinear loop filter.
-
-Combines outputs from the third order loop and second order assisted loop.
-
-# Arguments
-- `state`: Current loop filter state
-- `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
-- `Δt`: Integration time
-- `natural_frequencies`: `Tuple` `(ω₀, ω₀_assist)` of the natural frequencies of the
-  third order loop and the assisting second order loop
-
-# Returns
-Filtered frequency estimate.
-"""
 function filtered_output(state::ThirdOrderAssistedBilinearLF, δθ, Δt, natural_frequencies)
     ω₀, ω₀_assist = natural_frequencies
     state.x1 + Δt / 2 * state.x2 +

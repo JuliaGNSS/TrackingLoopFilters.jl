@@ -57,7 +57,7 @@ module TrackingLoopFilters
 
     # Arguments
     - `state`: Current loop filter state
-    - `δθ`: Phase discriminator output (dimensionless for standard filters, vector for assisted)
+    - `δθ`: Phase discriminator output, or for the assisted filter a `Tuple` `(δθ_high, δθ_low)`
     - `Δt`: Integration time
     - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
       `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
@@ -80,7 +80,7 @@ module TrackingLoopFilters
 
     # Arguments
     - `state`: Current loop filter state
-    - `δθ`: Phase discriminator output (dimensionless for standard filters, vector for assisted)
+    - `δθ`: Phase discriminator output, or for the assisted filter a `Tuple` `(δθ_high, δθ_low)`
     - `Δt`: Integration time
     - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
       `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
@@ -103,7 +103,7 @@ module TrackingLoopFilters
 
     # Arguments
     - `state`: Current loop filter state
-    - `δθ`: Phase discriminator output (dimensionless for standard filters, vector for assisted)
+    - `δθ`: Phase discriminator output, or for the assisted filter a `Tuple` `(δθ_high, δθ_low)`
     - `Δt`: Integration time
     - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
       `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
