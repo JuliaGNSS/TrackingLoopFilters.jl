@@ -11,7 +11,7 @@ $(TYPEDEF)
 Second order bilinear loop filter.
 
 Uses bilinear transformation for improved frequency response.
-The natural frequency scaling factor is 1.89.
+The natural frequency is `ω₀ = bandwidth / 0.53` (Kaplan & Hegarty, Table 5.6).
 
 $(TYPEDFIELDS)
 
@@ -32,7 +32,7 @@ $(TYPEDEF)
 Second order boxcar loop filter.
 
 Uses boxcar (rectangular) integration for simpler implementation.
-The natural frequency scaling factor is 1.89.
+The natural frequency is `ω₀ = bandwidth / 0.53` (Kaplan & Hegarty, Table 5.6).
 
 $(TYPEDFIELDS)
 
@@ -68,6 +68,14 @@ end
 """
 $(SIGNATURES)
 
+Natural frequency `ω₀ = bandwidth / 0.53` of a second order loop filter with the
+noise bandwidth `bandwidth` (Kaplan & Hegarty, Table 5.6).
+"""
+natural_frequency(state::AbstractSecondOrderLF, bandwidth) = bandwidth / 0.53
+
+"""
+$(SIGNATURES)
+
 Propagate the second order loop filter state.
 
 Updates the frequency state estimate using `x_next = x + Δt * ω₀² * δθ`.
@@ -76,13 +84,12 @@ Updates the frequency state estimate using `x_next = x + Δt * ω₀² * δθ`.
 - `state`: Current loop filter state
 - `δθ`: Phase discriminator output
 - `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
+- `ω₀`: Natural frequency
 
 # Returns
 New loop filter state with updated frequency estimate.
 """
-function propagate(state::T, δθ, Δt, bandwidth) where T <: AbstractSecondOrderLF
-    ω₀ = bandwidth * 1.89
+function propagate_state(state::T, δθ, Δt, ω₀) where T <: AbstractSecondOrderLF
     T(state.x + Δt * ω₀^2 * δθ)
 end
 
@@ -97,13 +104,12 @@ Computes `x + (√2 * ω₀ + ω₀² * Δt / 2) * δθ`.
 - `state`: Current loop filter state
 - `δθ`: Phase discriminator output
 - `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
+- `ω₀`: Natural frequency
 
 # Returns
 Filtered frequency estimate.
 """
-function get_filtered_output(state::SecondOrderBilinearLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth * 1.89
+function filtered_output(state::SecondOrderBilinearLF, δθ, Δt, ω₀)
     state.x + (sqrt(2) * ω₀ + ω₀^2 * Δt / 2) * δθ
 end
 
@@ -112,18 +118,21 @@ $(SIGNATURES)
 
 Calculate the filtered output for the second order boxcar loop filter.
 
-Computes `x + √2 * ω₀ * δθ`.
+Computes `x + (√2 * ω₀ + ω₀² * Δt) * δθ`, which includes the current `δθ` in the
+integrated frequency state (Kaplan & Hegarty, Figure 5.19(b)).
+Calculate the output before [`propagate_state`](@ref) propagates the state with the
+same `δθ`, as [`filter_loop`](@ref) does. From the propagated state, the current `δθ`
+would be integrated twice.
 
 # Arguments
 - `state`: Current loop filter state
 - `δθ`: Phase discriminator output
 - `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
+- `ω₀`: Natural frequency
 
 # Returns
 Filtered frequency estimate.
 """
-function get_filtered_output(state::SecondOrderBoxcarLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth * 1.89
-    state.x + sqrt(2) * ω₀ * δθ
+function filtered_output(state::SecondOrderBoxcarLF, δθ, Δt, ω₀)
+    state.x + (sqrt(2) * ω₀ + ω₀^2 * Δt) * δθ
 end
