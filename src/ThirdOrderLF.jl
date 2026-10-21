@@ -13,11 +13,9 @@ Abstract base type for assisted third order loop filters.
 abstract type AbstractThirdOrderAssistedLF <: AbstractLoopFilter end
 
 # Natural frequencies `(ω₀, ω₀_assist)` of the third order loop and the assisting
-# second order loop of an assisted third order filter. A single noise bandwidth
-# ties the assisting loop to the third order one (`ω₀ / 4`); a pair
-# `(bandwidth_high, bandwidth_low)` sets each from its own noise bandwidth.
-assisted_natural_frequencies(bandwidth) = (ω₀ = bandwidth / 0.7845; (ω₀, ω₀ / 4))
-assisted_natural_frequencies(bandwidth::Tuple{Any,Any}) = (bandwidth[1] / 0.7845, bandwidth[2] / 0.53)
+# second order loop of an assisted third order filter, each from its own noise
+# bandwidth in `(bandwidth_high, bandwidth_low)`.
+assisted_natural_frequencies(bandwidth) = (bandwidth[1] / 0.7845, bandwidth[2] / 0.53)
 
 """
 $(TYPEDEF)
@@ -51,10 +49,8 @@ Combines a third order bilinear loop with a second order assisted loop
 for improved tracking performance. Accepts a two-element discriminator
 input vector `[δθ_high, δθ_low]`.
 
-The bandwidth is either a single noise bandwidth, which sets the third order
-loop and ties the assisting loop to it (`ω₀_assist = ω₀ / 4`), or a pair
-`(bandwidth_high, bandwidth_low)` that sets each loop from its own noise
-bandwidth: `ω₀ = bandwidth_high / 0.7845` and
+The bandwidth is a `Tuple` `(bandwidth_high, bandwidth_low)` that sets each loop
+from its own noise bandwidth: `ω₀ = bandwidth_high / 0.7845` and
 `ω₀_assist = bandwidth_low / 0.53`, from the third and second order loops'
 noise bandwidths `0.7845 · ω₀` and `0.53 · ω₀` (Kaplan & Hegarty, Table 5.6).
 In a frequency-assisted phase-locked loop this sets the PLL and the FLL
@@ -65,7 +61,6 @@ $(TYPEDFIELDS)
 # Example
 ```julia
 lf = ThirdOrderAssistedBilinearLF()
-output, next_lf = filter_loop(lf, [δθ_high, δθ_low], Δt, bandwidth)
 output, next_lf = filter_loop(lf, [δθ_high, δθ_low], Δt, (bandwidth_high, bandwidth_low))
 ```
 """
@@ -159,14 +154,14 @@ dual discriminator inputs.
 - `state`: Current loop filter state
 - `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
 - `Δt`: Integration time
-- `bandwidth`: Loop bandwidth, or a pair `(bandwidth_high, bandwidth_low)` for the
+- `bandwidth`: `Tuple` `(bandwidth_high, bandwidth_low)` of the loop bandwidths of the
   third order loop and the assisting second order loop (see
   [`ThirdOrderAssistedBilinearLF`](@ref))
 
 # Returns
 New loop filter state with updated estimates.
 """
-function propagate(state::T, δθ, Δt, bandwidth) where T <: AbstractThirdOrderAssistedLF
+function propagate(state::T, δθ, Δt, bandwidth::Tuple{Any,Any}) where T <: AbstractThirdOrderAssistedLF
     ω₀, ω₀_assist = assisted_natural_frequencies(bandwidth)
     T(state.x1 + Δt * state.x2 + 1.1 * Δt * ω₀^2 * δθ[1] + Δt * sqrt(2) * ω₀_assist * δθ[2], state.x2 + Δt * ω₀^3 * δθ[1] + Δt * ω₀_assist^2 * δθ[2])
 end
@@ -201,14 +196,14 @@ Combines outputs from the third order loop and second order assisted loop.
 - `state`: Current loop filter state
 - `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
 - `Δt`: Integration time
-- `bandwidth`: Loop bandwidth, or a pair `(bandwidth_high, bandwidth_low)` for the
+- `bandwidth`: `Tuple` `(bandwidth_high, bandwidth_low)` of the loop bandwidths of the
   third order loop and the assisting second order loop (see
   [`ThirdOrderAssistedBilinearLF`](@ref))
 
 # Returns
 Filtered frequency estimate.
 """
-function get_filtered_output(state::ThirdOrderAssistedBilinearLF, δθ, Δt, bandwidth)
+function get_filtered_output(state::ThirdOrderAssistedBilinearLF, δθ, Δt, bandwidth::Tuple{Any,Any})
     ω₀, ω₀_assist = assisted_natural_frequencies(bandwidth)
     state.x1 + Δt / 2 * state.x2 +
         (2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4) * δθ[1] +

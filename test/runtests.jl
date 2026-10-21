@@ -96,7 +96,7 @@ end
 end
 
 @testset "Third Order Assisted Bilinear Loop Filter" begin
-    bandwidth = 2Hz * 0.7845
+    bandwidth = (2Hz * 0.7845, 0.5Hz * 0.53)
     loop_filter = @inferred ThirdOrderAssistedBilinearLF()
     
     out = get_filtered_output(loop_filter, [1.0 1.0Hz], 2s, bandwidth)
@@ -115,15 +115,9 @@ end
 @testset "Third Order Assisted Bilinear Loop Filter with separate bandwidths" begin
     Δt = 0.001s
     δθ = (0.1, 2.0Hz)
-    # A pair whose low bandwidth matches the tied coupling reproduces the single bandwidth.
-    bandwidth = 18Hz
-    tied_low = bandwidth / 0.7845 / 4 * 0.53
-    for (single, pair) in ((get_filtered_output, get_filtered_output), (propagate, propagate))
-        a = single(ThirdOrderAssistedBilinearLF(), δθ, Δt, bandwidth)
-        b = @inferred pair(ThirdOrderAssistedBilinearLF(), δθ, Δt, (bandwidth, tied_low))
-        @test all(isapprox.(a isa ThirdOrderAssistedBilinearLF ? (a.x1, a.x2) : (a,),
-            b isa ThirdOrderAssistedBilinearLF ? (b.x1, b.x2) : (b,); rtol = 1e-12))
-    end
+    # The assisted filter takes a Tuple bandwidth; a single one raises a MethodError.
+    @test_throws MethodError propagate(ThirdOrderAssistedBilinearLF(), δθ, Δt, 18Hz)
+    @test_throws MethodError get_filtered_output(ThirdOrderAssistedBilinearLF(), δθ, Δt, 18Hz)
 
     # A zero low bandwidth is the unassisted third order filter.
     assisted, plain = ThirdOrderAssistedBilinearLF(), ThirdOrderBilinearLF()
