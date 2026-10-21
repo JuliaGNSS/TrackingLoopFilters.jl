@@ -12,10 +12,11 @@ Abstract base type for assisted third order loop filters.
 """
 abstract type AbstractThirdOrderAssistedLF <: AbstractLoopFilter end
 
-# Natural frequencies `(ω₀, ω₀_assist)` of the third order loop and the assisting
-# second order loop of an assisted third order filter, each from its own noise
-# bandwidth in `(bandwidth_high, bandwidth_low)`.
-assisted_natural_frequencies(bandwidth) = (bandwidth[1] / 0.7845, bandwidth[2] / 0.53)
+natural_frequency(state::AbstractThirdOrderLF, bandwidth) = bandwidth / 0.7845
+
+# `(ω₀, ω₀_assist)` of the third order loop and the assisting second order loop.
+natural_frequency(state::AbstractThirdOrderAssistedLF, bandwidth::Tuple{Any,Any}) =
+    (bandwidth[1] / 0.7845, bandwidth[2] / 0.53)
 
 """
 $(TYPEDEF)
@@ -121,50 +122,16 @@ function ThirdOrderBoxcarLF()
     ThirdOrderBoxcarLF(0.0Hz, 0.0Hz^2)
 end
 
-"""
-$(SIGNATURES)
-
-Propagate the third order boxcar loop filter state.
-
-Updates both frequency and frequency rate state estimates. The frequency state
-integrates the boxcar output `x2 + Δt * ω₀³ * δθ` of the frequency rate
-integrator, which includes the current `δθ` (Kaplan & Hegarty, Figure 5.19(b)).
-
-# Arguments
-- `state`: Current loop filter state
-- `δθ`: Phase discriminator output
-- `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
-
-# Returns
-New loop filter state with updated estimates.
-"""
-function propagate(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth / 0.7845
+# The frequency state integrates the boxcar output `x2 + Δt * ω₀³ * δθ` of the frequency
+# rate integrator, which includes the current `δθ` (Kaplan & Hegarty, Figure 5.19(b)).
+function propagate_state(state::ThirdOrderBoxcarLF, δθ, Δt, ω₀)
     x2_boxcar = state.x2 + Δt * ω₀^3 * δθ
     typeof(state)(state.x1 + Δt * x2_boxcar + 1.1 * Δt * ω₀^2 * δθ, x2_boxcar)
 end
 
-"""
-$(SIGNATURES)
-
-Propagate the third order bilinear loop filter state.
-
-Updates both frequency and frequency rate state estimates. The frequency state
-integrates the bilinear output `x2 + Δt / 2 * ω₀³ * δθ` of the frequency rate
-integrator (Kaplan & Hegarty, Figure 5.20(c)).
-
-# Arguments
-- `state`: Current loop filter state
-- `δθ`: Phase discriminator output
-- `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
-
-# Returns
-New loop filter state with updated estimates.
-"""
-function propagate(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth / 0.7845
+# The frequency state integrates the bilinear output `x2 + Δt / 2 * ω₀³ * δθ` of the
+# frequency rate integrator (Kaplan & Hegarty, Figure 5.20(c)).
+function propagate_state(state::ThirdOrderBilinearLF, δθ, Δt, ω₀)
     Δx2 = Δt * ω₀^3 * δθ
     x2_bilinear = state.x2 + Δx2 / 2
     typeof(state)(state.x1 + Δt * x2_bilinear + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δx2)
@@ -183,36 +150,20 @@ of the frequency rate integrator (Kaplan & Hegarty, Figure 5.21(b)).
 - `state`: Current loop filter state
 - `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
 - `Δt`: Integration time
-- `bandwidth`: `Tuple` `(bandwidth_high, bandwidth_low)` of the loop bandwidths of the
-  third order loop and the assisting second order loop (see
-  [`ThirdOrderAssistedBilinearLF`](@ref))
+- `natural_frequencies`: `Tuple` `(ω₀, ω₀_assist)` of the natural frequencies of the
+  third order loop and the assisting second order loop
 
 # Returns
 New loop filter state with updated estimates.
 """
-function propagate(state::T, δθ, Δt, bandwidth::Tuple{Any,Any}) where T <: AbstractThirdOrderAssistedLF
-    ω₀, ω₀_assist = assisted_natural_frequencies(bandwidth)
+function propagate_state(state::T, δθ, Δt, natural_frequencies) where T <: AbstractThirdOrderAssistedLF
+    ω₀, ω₀_assist = natural_frequencies
     Δx2 = Δt * ω₀^3 * δθ[1] + Δt * ω₀_assist^2 * δθ[2]
     x2_bilinear = state.x2 + Δx2 / 2
     T(state.x1 + Δt * x2_bilinear + 1.1 * Δt * ω₀^2 * δθ[1] + Δt * sqrt(2) * ω₀_assist * δθ[2], state.x2 + Δx2)
 end
 
-"""
-$(SIGNATURES)
-
-Calculate the filtered output for the third order bilinear loop filter.
-
-# Arguments
-- `state`: Current loop filter state
-- `δθ`: Phase discriminator output
-- `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
-
-# Returns
-Filtered frequency estimate.
-"""
-function get_filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth / 0.7845
+function filtered_output(state::ThirdOrderBilinearLF, δθ, Δt, ω₀)
     state.x1 + Δt / 2 * state.x2 + (2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4) * δθ
 end
 
@@ -227,40 +178,20 @@ Combines outputs from the third order loop and second order assisted loop.
 - `state`: Current loop filter state
 - `δθ`: Two-element vector `[δθ_high, δθ_low]` with high and low order discriminator outputs
 - `Δt`: Integration time
-- `bandwidth`: `Tuple` `(bandwidth_high, bandwidth_low)` of the loop bandwidths of the
-  third order loop and the assisting second order loop (see
-  [`ThirdOrderAssistedBilinearLF`](@ref))
+- `natural_frequencies`: `Tuple` `(ω₀, ω₀_assist)` of the natural frequencies of the
+  third order loop and the assisting second order loop
 
 # Returns
 Filtered frequency estimate.
 """
-function get_filtered_output(state::ThirdOrderAssistedBilinearLF, δθ, Δt, bandwidth::Tuple{Any,Any})
-    ω₀, ω₀_assist = assisted_natural_frequencies(bandwidth)
+function filtered_output(state::ThirdOrderAssistedBilinearLF, δθ, Δt, natural_frequencies)
+    ω₀, ω₀_assist = natural_frequencies
     state.x1 + Δt / 2 * state.x2 +
         (2.4 * ω₀ + 1.1 * ω₀^2 * Δt / 2 + ω₀^3 * Δt^2 / 4) * δθ[1] +
         (sqrt(2) * ω₀_assist * Δt / 2 + ω₀_assist^2 * Δt^2 / 4) * δθ[2]
 end
 
-"""
-$(SIGNATURES)
-
-Calculate the filtered output for the third order boxcar loop filter.
-
-Both integrators include the current `δθ` (Kaplan & Hegarty, Figure 5.19(b)).
-Calculate the output before [`propagate`](@ref) propagates the state with the same
-`δθ`, as [`filter_loop`](@ref) does. From the propagated state, the current `δθ`
-would be integrated twice.
-
-# Arguments
-- `state`: Current loop filter state
-- `δθ`: Phase discriminator output
-- `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
-
-# Returns
-Filtered frequency estimate.
-"""
-function get_filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth / 0.7845
+# Both boxcar integrators include the current `δθ` (Kaplan & Hegarty, Figure 5.19(b)).
+function filtered_output(state::ThirdOrderBoxcarLF, δθ, Δt, ω₀)
     state.x1 + Δt * state.x2 + (2.4 * ω₀ + 1.1 * ω₀^2 * Δt + ω₀^3 * Δt^2) * δθ
 end

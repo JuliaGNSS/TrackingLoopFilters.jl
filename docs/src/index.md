@@ -25,4 +25,14 @@ output, next_lf = filter_loop(lf, δθ, Δt, bandwidth)
 
 ```@autodocs
 Modules = [TrackingLoopFilters]
+Private = false
+```
+
+## Internals
+
+Unexported types and methods, which are not part of the public API.
+
+```@autodocs
+Modules = [TrackingLoopFilters]
+Public = false
 ```

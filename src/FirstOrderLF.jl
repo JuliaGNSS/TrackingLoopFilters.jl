@@ -22,6 +22,8 @@ output, next_lf = filter_loop(lf, δθ, Δt, bandwidth)
 struct FirstOrderLF <: AbstractFirstOrderLF
 end
 
+natural_frequency(state::AbstractFirstOrderLF, bandwidth) = bandwidth / 0.25
+
 """
 $(SIGNATURES)
 
@@ -33,12 +35,12 @@ Since the first order filter is stateless, this returns the input state unchange
 - `state`: Current loop filter state
 - `δθ`: Phase discriminator output
 - `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
+- `ω₀`: Natural frequency
 
 # Returns
 The unchanged loop filter state.
 """
-function propagate(state::FirstOrderLF, δθ, Δt, bandwidth)
+function propagate_state(state::FirstOrderLF, δθ, Δt, ω₀)
     state
 end
 
@@ -47,18 +49,17 @@ $(SIGNATURES)
 
 Calculate the filtered output for the first order loop filter.
 
-Computes `ω₀ * δθ` where `ω₀ = bandwidth / 0.25`.
+Computes `ω₀ * δθ`.
 
 # Arguments
 - `state`: Current loop filter state
 - `δθ`: Phase discriminator output
 - `Δt`: Integration time
-- `bandwidth`: Loop bandwidth
+- `ω₀`: Natural frequency
 
 # Returns
 Filtered frequency estimate.
 """
-function get_filtered_output(state::FirstOrderLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth / 0.25
+function filtered_output(state::FirstOrderLF, δθ, Δt, ω₀)
     ω₀ * δθ
 end
