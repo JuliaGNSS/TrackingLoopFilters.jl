@@ -11,7 +11,7 @@ $(TYPEDEF)
 First order loop filter (proportional only).
 
 A stateless filter that provides proportional gain without integration.
-The natural frequency scaling factor is 4.0.
+The natural frequency is `ω₀ = bandwidth / 0.25` (Kaplan & Hegarty, Table 5.6).
 
 # Example
 ```julia
@@ -47,7 +47,7 @@ $(SIGNATURES)
 
 Calculate the filtered output for the first order loop filter.
 
-Computes `ω₀ * δθ` where `ω₀ = bandwidth * 4.0`.
+Computes `ω₀ * δθ` where `ω₀ = bandwidth / 0.25`.
 
 # Arguments
 - `state`: Current loop filter state
@@ -59,6 +59,6 @@ Computes `ω₀ * δθ` where `ω₀ = bandwidth * 4.0`.
 Filtered frequency estimate.
 """
 function get_filtered_output(state::FirstOrderLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth * 4.0
+    ω₀ = bandwidth / 0.25
     ω₀ * δθ
 end

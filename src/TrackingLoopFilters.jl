@@ -60,7 +60,8 @@ module TrackingLoopFilters
     - `state`: Current loop filter state
     - `δθ`: Phase discriminator output (dimensionless for standard filters, vector for assisted)
     - `Δt`: Integration time
-    - `bandwidth`: Loop bandwidth
+    - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
+      `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
 
     # Returns
     - `output`: Filtered frequency estimate
