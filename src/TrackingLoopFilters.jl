@@ -54,7 +54,8 @@ module TrackingLoopFilters
     Propagate the loop filter state and return both the filtered output and next state.
 
     This is a convenience function that combines [`propagate`](@ref) and
-    [`get_filtered_output`](@ref) into a single call.
+    [`get_filtered_output`](@ref) into a single call. The output is calculated from
+    the current state, before it is propagated with the same `δθ`.
 
     # Arguments
     - `state`: Current loop filter state
@@ -68,8 +69,8 @@ module TrackingLoopFilters
     - `next_state`: Propagated loop filter state
     """
     function filter_loop(state::T, δθ, Δt, bandwidth) where T <: AbstractLoopFilter
+        output = get_filtered_output(state, δθ, Δt, bandwidth)
         next_state = propagate(state, δθ, Δt, bandwidth)
-        output = get_filtered_output(next_state, δθ, Δt, bandwidth)
         output, next_state
     end
 
