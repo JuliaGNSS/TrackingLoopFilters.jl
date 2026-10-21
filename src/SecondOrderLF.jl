@@ -11,7 +11,7 @@ $(TYPEDEF)
 Second order bilinear loop filter.
 
 Uses bilinear transformation for improved frequency response.
-The natural frequency scaling factor is 1.89.
+The natural frequency is `ω₀ = bandwidth / 0.53` (Kaplan & Hegarty, Table 5.6).
 
 $(TYPEDFIELDS)
 
@@ -32,7 +32,7 @@ $(TYPEDEF)
 Second order boxcar loop filter.
 
 Uses boxcar (rectangular) integration for simpler implementation.
-The natural frequency scaling factor is 1.89.
+The natural frequency is `ω₀ = bandwidth / 0.53` (Kaplan & Hegarty, Table 5.6).
 
 $(TYPEDFIELDS)
 
@@ -82,7 +82,7 @@ Updates the frequency state estimate using `x_next = x + Δt * ω₀² * δθ`.
 New loop filter state with updated frequency estimate.
 """
 function propagate(state::T, δθ, Δt, bandwidth) where T <: AbstractSecondOrderLF
-    ω₀ = bandwidth * 1.89
+    ω₀ = bandwidth / 0.53
     T(state.x + Δt * ω₀^2 * δθ)
 end
 
@@ -103,7 +103,7 @@ Computes `x + (√2 * ω₀ + ω₀² * Δt / 2) * δθ`.
 Filtered frequency estimate.
 """
 function get_filtered_output(state::SecondOrderBilinearLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth * 1.89
+    ω₀ = bandwidth / 0.53
     state.x + (sqrt(2) * ω₀ + ω₀^2 * Δt / 2) * δθ
 end
 
@@ -124,6 +124,6 @@ Computes `x + √2 * ω₀ * δθ`.
 Filtered frequency estimate.
 """
 function get_filtered_output(state::SecondOrderBoxcarLF, δθ, Δt, bandwidth)
-    ω₀ = bandwidth * 1.89
+    ω₀ = bandwidth / 0.53
     state.x + sqrt(2) * ω₀ * δθ
 end
