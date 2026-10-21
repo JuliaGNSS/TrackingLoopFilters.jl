@@ -124,7 +124,7 @@ end
 """
 $(SIGNATURES)
 
-Propagate the third order loop filter state.
+Propagate the third order boxcar loop filter state.
 
 Updates both frequency and frequency rate state estimates.
 
@@ -137,9 +137,34 @@ Updates both frequency and frequency rate state estimates.
 # Returns
 New loop filter state with updated estimates.
 """
-function propagate(state::T, δθ, Δt, bandwidth) where T <: AbstractThirdOrderLF
+function propagate(state::ThirdOrderBoxcarLF, δθ, Δt, bandwidth)
     ω₀ = bandwidth / 0.7845
-    T(state.x1 + Δt * state.x2 + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δt * ω₀^3 * δθ)
+    ThirdOrderBoxcarLF(state.x1 + Δt * state.x2 + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δt * ω₀^3 * δθ)
+end
+
+"""
+$(SIGNATURES)
+
+Propagate the third order bilinear loop filter state.
+
+Updates both frequency and frequency rate state estimates. The frequency state
+integrates the bilinear output `x2 + Δt / 2 * ω₀³ * δθ` of the frequency rate
+integrator (Kaplan & Hegarty, Figure 5.20(c)).
+
+# Arguments
+- `state`: Current loop filter state
+- `δθ`: Phase discriminator output
+- `Δt`: Integration time
+- `bandwidth`: Loop bandwidth
+
+# Returns
+New loop filter state with updated estimates.
+"""
+function propagate(state::ThirdOrderBilinearLF, δθ, Δt, bandwidth)
+    ω₀ = bandwidth / 0.7845
+    Δx2 = Δt * ω₀^3 * δθ
+    x2_bilinear = state.x2 + Δx2 / 2
+    ThirdOrderBilinearLF(state.x1 + Δt * x2_bilinear + 1.1 * Δt * ω₀^2 * δθ, state.x2 + Δx2)
 end
 
 """
@@ -148,7 +173,8 @@ $(SIGNATURES)
 Propagate the assisted third order loop filter state.
 
 Updates both frequency and frequency rate state estimates using
-dual discriminator inputs.
+dual discriminator inputs. The frequency state integrates the bilinear output
+of the frequency rate integrator (Kaplan & Hegarty, Figure 5.21(b)).
 
 # Arguments
 - `state`: Current loop filter state
@@ -163,7 +189,9 @@ New loop filter state with updated estimates.
 """
 function propagate(state::T, δθ, Δt, bandwidth::Tuple{Any,Any}) where T <: AbstractThirdOrderAssistedLF
     ω₀, ω₀_assist = assisted_natural_frequencies(bandwidth)
-    T(state.x1 + Δt * state.x2 + 1.1 * Δt * ω₀^2 * δθ[1] + Δt * sqrt(2) * ω₀_assist * δθ[2], state.x2 + Δt * ω₀^3 * δθ[1] + Δt * ω₀_assist^2 * δθ[2])
+    Δx2 = Δt * ω₀^3 * δθ[1] + Δt * ω₀_assist^2 * δθ[2]
+    x2_bilinear = state.x2 + Δx2 / 2
+    T(state.x1 + Δt * x2_bilinear + 1.1 * Δt * ω₀^2 * δθ[1] + Δt * sqrt(2) * ω₀_assist * δθ[2], state.x2 + Δx2)
 end
 
 """
