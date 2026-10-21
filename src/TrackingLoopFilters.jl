@@ -114,8 +114,9 @@ module TrackingLoopFilters
     - `next_state`: Propagated loop filter state
     """
     function filter_loop(state::T, δθ, Δt, bandwidth) where T <: AbstractLoopFilter
-        output = filtered_output(state, δθ, Δt, natural_frequency(state, bandwidth))
-        next_state = propagate_state(state, δθ, Δt, natural_frequency(state, bandwidth))
+        ω₀ = natural_frequency(state, bandwidth)
+        output = filtered_output(state, δθ, Δt, ω₀)
+        next_state = propagate_state(state, δθ, Δt, ω₀)
         output, next_state
     end
 
