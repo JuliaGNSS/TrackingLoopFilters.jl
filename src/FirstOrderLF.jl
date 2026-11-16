@@ -10,17 +10,30 @@ $(TYPEDEF)
 
 First order loop filter (proportional only).
 
-A stateless filter that provides proportional gain without integration.
+Provides proportional gain without integration, around a constant frequency
+that propagation leaves unchanged.
 The natural frequency is `ω₀ = bandwidth / 0.25` (Kaplan & Hegarty, Table 5.6).
+
+$(TYPEDFIELDS)
 
 # Example
 ```julia
 lf = FirstOrderLF()
+lf = FirstOrderLF(; frequency = 1000.0Hz)
 output, next_lf = filter_loop(lf, δθ, Δt, bandwidth)
 ```
 """
-struct FirstOrderLF <: AbstractFirstOrderLF
+struct FirstOrderLF{T} <: AbstractFirstOrderLF
+    "Constant frequency"
+    x::T
 end
+
+"""
+    FirstOrderLF(; frequency = 0.0Hz)
+
+Construct a first order loop filter around the constant `frequency`.
+"""
+FirstOrderLF(; frequency = 0.0Hz) = FirstOrderLF(_as_frequency_state(frequency))
 
 """
 $(SIGNATURES)
@@ -35,7 +48,8 @@ $(SIGNATURES)
 
 Propagate the first order loop filter state.
 
-Since the first order filter is stateless, this returns the input state unchanged.
+The frequency of the first order filter is constant, so this returns the input
+state unchanged.
 
 # Arguments
 - `state`: Current loop filter state
@@ -55,7 +69,7 @@ $(SIGNATURES)
 
 Calculate the filtered output for the first order loop filter.
 
-Computes `ω₀ * δθ`.
+Computes `x + ω₀ * δθ`.
 
 # Arguments
 - `state`: Current loop filter state
@@ -67,5 +81,6 @@ Computes `ω₀ * δθ`.
 Filtered frequency estimate.
 """
 function filtered_output(state::FirstOrderLF, δθ, Δt, ω₀)
-    ω₀ * δθ
+    state.x + ω₀ * δθ
 end
+

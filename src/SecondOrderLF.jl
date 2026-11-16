@@ -18,6 +18,7 @@ $(TYPEDFIELDS)
 # Example
 ```julia
 lf = SecondOrderBilinearLF()
+lf = SecondOrderBilinearLF(; frequency = 1000.0Hz)
 output, next_lf = filter_loop(lf, δθ, Δt, bandwidth)
 ```
 """
@@ -39,6 +40,7 @@ $(TYPEDFIELDS)
 # Example
 ```julia
 lf = SecondOrderBoxcarLF()
+lf = SecondOrderBoxcarLF(; frequency = 1000.0Hz)
 output, next_lf = filter_loop(lf, δθ, Δt, bandwidth)
 ```
 """
@@ -48,22 +50,18 @@ struct SecondOrderBoxcarLF{T} <: AbstractSecondOrderLF
 end
 
 """
-    SecondOrderBilinearLF()
+    SecondOrderBilinearLF(; frequency = 0.0Hz)
 
-Construct a second order bilinear loop filter with zero initial state.
+Construct a second order bilinear loop filter at the initial `frequency`.
 """
-function SecondOrderBilinearLF()
-    SecondOrderBilinearLF(0.0Hz)
-end
+SecondOrderBilinearLF(; frequency = 0.0Hz) = SecondOrderBilinearLF(_as_frequency_state(frequency))
 
 """
-    SecondOrderBoxcarLF()
+    SecondOrderBoxcarLF(; frequency = 0.0Hz)
 
-Construct a second order boxcar loop filter with zero initial state.
+Construct a second order boxcar loop filter at the initial `frequency`.
 """
-function SecondOrderBoxcarLF()
-    SecondOrderBoxcarLF(0.0Hz)
-end
+SecondOrderBoxcarLF(; frequency = 0.0Hz) = SecondOrderBoxcarLF(_as_frequency_state(frequency))
 
 """
 $(SIGNATURES)
@@ -136,10 +134,3 @@ Filtered frequency estimate.
 function filtered_output(state::SecondOrderBoxcarLF, δθ, Δt, ω₀)
     state.x + (sqrt(2) * ω₀ + ω₀^2 * Δt) * δθ
 end
-
-# Adding the zero frequency rate over `τ` raises a DimensionError for a `τ` that is not
-# a time, as for the third order filters.
-predict_frequency(state::AbstractSecondOrderLF, τ) =
-    _in_frequency_units(state.x + τ * get_frequency_rate(state))
-
-get_frequency_rate(state::AbstractSecondOrderLF) = _in_frequency_rate_units(zero(state.x) / s)
