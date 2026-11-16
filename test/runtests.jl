@@ -3,7 +3,7 @@ using LinearAlgebra
 using Test
 using TrackingLoopFilters
 
-import Unitful: Hz, s
+import Unitful: DimensionError, Hz, s, unit
 
 @testset "Aqua" begin
     Aqua.test_all(TrackingLoopFilters)
@@ -209,4 +209,128 @@ end
 
     out, loop_filter = @inferred filter_loop(loop_filter, 2.0, 2s, bandwidth)
     @test out == 8Hz
+end
+
+# Tracks the Doppler f(t) = f0 + a·t for N integrations of T, starting at t = 0 with the
+# carrier NCO at `command` and the residual phase (cycles) at `φ0`. Each output commands
+# the next integration. The discriminators are the mean residual phase over the
+# integration and, for an assisted filter, the mean residual frequency (Hz). Returns the
+# filter, the discriminator outputs and the commands.
+function track_ramp(lf, bandwidth; f0, a, T, N, command = 0.0, φ0 = 0.0)
+    φ = φ0
+    δθs, commands = Float64[], Float64[]
+    for k in 0:N-1
+        t0 = k * T
+        δf = f0 + a * (t0 + T / 2) - command
+        δθ = φ + (f0 + a * t0 - command) * T / 2 + a * T^2 / 6
+        φ += δf * T
+        input = is_assisted(lf) ? (δθ, δf * Hz) : δθ
+        out, lf = filter_loop(lf, input, T * s, bandwidth)
+        command = Float64(out / Hz)
+        push!(δθs, δθ)
+        push!(commands, command)
+    end
+    lf, δθs, commands
+end
+
+@testset "Frequency estimates" begin
+    f0, a, T, N = 100.0, 50.0, 1e-3, 20_000
+    t_end = N * T
+    truth(t) = (f0 + a * t) * Hz
+    for (lf, bandwidth) in (
+        (ThirdOrderBilinearLF(), 10Hz),
+        (ThirdOrderBoxcarLF(), 10Hz),
+        (ThirdOrderAssistedBilinearLF(), (10Hz, 2Hz)),
+    )
+        lf, = track_ramp(lf, bandwidth; f0, a, T, N)
+        @test @inferred(get_frequency_rate(lf)) ≈ a * Hz / s
+        @test unit(get_frequency_rate(lf)) == Hz / s
+        for τ in (-T / 2, 0.0, T / 2, 0.1)
+            @test @inferred(predict_frequency(lf, τ * s)) ≈ truth(t_end + τ)
+            @test unit(predict_frequency(lf, τ * s)) == Hz
+        end
+        # Without a new discriminator output, the output after the next integration is
+        # the frequency at the centre of the one after it.
+        @test predict_frequency(lf, 3T / 2 * s) ≈
+            get_filtered_output(lf, is_assisted(lf) ? (0.0, 0.0Hz) : 0.0, T * s, bandwidth)
+    end
+    for lf in (SecondOrderBilinearLF(), SecondOrderBoxcarLF())
+        lf, = track_ramp(lf, 5Hz; f0, a = 0.0, T, N)
+        @test predict_frequency(lf, 0.1s) ≈ f0 * Hz
+        @test get_frequency_rate(lf) === 0.0Hz / s
+    end
+
+    # `τ` is a time for every filter, also below third order, which ignore it.
+    for lf in (SecondOrderBilinearLF(), SecondOrderBoxcarLF(), ThirdOrderBilinearLF(),
+        ThirdOrderBoxcarLF(), ThirdOrderAssistedBilinearLF())
+        @test_throws DimensionError predict_frequency(lf, 0)
+    end
+
+    @test @inferred(is_assisted(ThirdOrderAssistedBilinearLF()))
+    @test is_assisted(ThirdOrderAssistedBilinearLF)
+    @test !is_assisted(ThirdOrderBilinearLF())
+    @test !is_assisted(SecondOrderBoxcarLF)
+    @test !is_assisted(FirstOrderLF())
+end
+
+# Tracks the Doppler f(t) = f0 + a·t over integrations of the lengths `Ts`, starting at
+# t = 0 with the residual phase (cycles) at `φ0`. Each integration is commanded with the
+# filter's prediction for its centre, as a tracking loop that knows the length of the
+# next integration does. The discriminators are as in `track_ramp`, or zero for
+# `open_loop`. Returns the filter after each integration and the command errors.
+function track_ramp_predicted(lf, bandwidth, Ts; f0, a, φ0 = 0.0, open_loop = false)
+    φ, t0 = φ0, 0.0
+    lfs, command_errors = typeof(lf)[], Float64[]
+    for T in Ts
+        command = Float64(predict_frequency(lf, T / 2 * s) / Hz)
+        δf = f0 + a * (t0 + T / 2) - command
+        δθ = open_loop ? 0.0 : φ + (f0 + a * t0 - command) * T / 2 + a * T^2 / 6
+        φ += δf * T
+        input = is_assisted(lf) ? (δθ, (open_loop ? 0.0 : δf) * Hz) : δθ
+        _, lf = filter_loop(lf, input, T * s, bandwidth)
+        t0 += T
+        push!(lfs, lf)
+        push!(command_errors, -δf)
+    end
+    lfs, command_errors
+end
+
+@testset "Frequency estimates across a change of the integration time" begin
+    f0, a = 100.0, 50.0
+    T1, T2 = 1e-3, 20e-3
+    # 1 ms integrations, then 20 ms after bit synchronisation, then 1 ms again.
+    Ts = [fill(T1, 2000); fill(T2, 100); fill(T1, 100)]
+    ends = cumsum(Ts)
+    truth(t) = (f0 + a * t) * Hz
+    # 2 Hz keep the loops stable at 20 ms.
+    for (F, bandwidth) in ((ThirdOrderBilinearLF, 2Hz), (ThirdOrderBoxcarLF, 2Hz),
+        (ThirdOrderAssistedBilinearLF, (2Hz, 1Hz)))
+        # Without discriminator outputs, the filter extrapolates its estimates of the
+        # ramp exactly, whatever the integration times.
+        lfs, command_errors = track_ramp_predicted(F(f0 * Hz, a * Hz^2), bandwidth, Ts;
+            f0, a, open_loop = true)
+        @test maximum(abs, command_errors) < 1e-9
+        for (lf, t_end, T) in zip(lfs, ends, Ts)
+            @test predict_frequency(lf, 0.0s) ≈ truth(t_end) rtol = 1e-12
+            @test lf.Δt == T * s
+            # Without a new discriminator output, the output commands the frequency at
+            # the centre of the integration after the next, if it has the same length.
+            input = is_assisted(lf) ? (0.0, 0.0Hz) : 0.0
+            @test filter_loop(lf, input, T * s, bandwidth)[1] ≈ truth(t_end + 3T / 2) rtol = 1e-12
+        end
+
+        # Tracking the ramp, the change of the integration time changes the mean
+        # residual phase over an integration by a(T1² - T2²) / 12, which the loop
+        # follows, but it does not shift the frequency estimate by (T2 - T1)·a or
+        # (T2 - T1)·a / 2, 0.95 Hz or 0.475 Hz. Without moving the frequency state to
+        # the new integration time, the errors below are 0.59 to 1.2 Hz after the first
+        # 20 ms integration and up to 5.6 Hz later.
+        lfs, command_errors = track_ramp_predicted(F(f0 * Hz, a * Hz^2), bandwidth, Ts;
+            f0, a, φ0 = a * T1^2 / 12)
+        @test maximum(abs, command_errors[1:2000]) < 1e-8
+        switch = 2001
+        @test abs(predict_frequency(lfs[switch], 0.0s) - truth(ends[switch])) < 0.01Hz
+        @test abs(command_errors[switch+1]) < 0.01
+        @test maximum(abs, command_errors[switch:end]) < 0.05
+    end
 end

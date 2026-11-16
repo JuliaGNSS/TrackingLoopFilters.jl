@@ -136,3 +136,10 @@ Filtered frequency estimate.
 function filtered_output(state::SecondOrderBoxcarLF, δθ, Δt, ω₀)
     state.x + (sqrt(2) * ω₀ + ω₀^2 * Δt) * δθ
 end
+
+# Adding the zero frequency rate over `τ` raises a DimensionError for a `τ` that is not
+# a time, as for the third order filters.
+predict_frequency(state::AbstractSecondOrderLF, τ) =
+    _in_frequency_units(state.x + τ * get_frequency_rate(state))
+
+get_frequency_rate(state::AbstractSecondOrderLF) = _in_frequency_rate_units(zero(state.x) / s)
