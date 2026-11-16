@@ -2,7 +2,7 @@ using Aqua
 using Test
 using TrackingLoopFilters
 
-import Unitful: DimensionError, Hz, s, unit
+import Unitful: DimensionError, Hz, s, unit, @u_str
 
 @testset "Aqua" begin
     Aqua.test_all(TrackingLoopFilters)
@@ -332,4 +332,80 @@ end
         @test abs(command_errors[switch+1]) < 0.01
         @test maximum(abs, command_errors[switch:end]) < 0.05
     end
+end
+
+@testset "Initial frequency and frequency rate" begin
+    f0, a, T, N = 100.0, 50.0, 1e-3, 1000
+    Δt = T * s
+    # The default states are zero and keep their types when propagated.
+    for lf in (FirstOrderLF(), SecondOrderBilinearLF(), SecondOrderBoxcarLF(),
+        ThirdOrderBilinearLF(), ThirdOrderBoxcarLF(), ThirdOrderAssistedBilinearLF())
+        @test predict_frequency(lf, 0.0s) === 0.0Hz
+        input = is_assisted(lf) ? (0.1, 1.0Hz) : 0.1
+        bandwidth = is_assisted(lf) ? (10Hz, 2Hz) : 10Hz
+        @test typeof(propagate(lf, input, Δt, bandwidth)) == typeof(lf)
+        @test typeof(@inferred reinit(lf)) == typeof(lf)
+        @test typeof(@inferred reinit(typeof(lf))) == typeof(lf)
+    end
+
+    # A third order filter started at the Doppler f0 + a·t of the signal, with the NCO at
+    # its prediction for the first integration, sees no phase error and commands the
+    # Doppler at the centre of each next integration.
+    for (F, bandwidth) in ((ThirdOrderBilinearLF, 10Hz), (ThirdOrderBoxcarLF, 10Hz),
+        (ThirdOrderAssistedBilinearLF, (10Hz, 2Hz)))
+        lf = @inferred reinit(F; frequency = f0 * Hz, frequency_rate = a * Hz / s)
+        @test lf == F(; frequency = f0 * Hz, frequency_rate = a * Hz / s)
+        @test lf == F(f0 * Hz, a * Hz^2)
+        @test get_frequency_rate(lf) ≈ a * Hz / s
+        for τ in (0.0, T / 2, 0.1)
+            @test predict_frequency(lf, τ * s) ≈ (f0 + a * τ) * Hz
+        end
+        _, δθs, commands = track_ramp(lf, bandwidth; f0, a, T, N,
+            command = Float64(predict_frequency(lf, Δt / 2) / Hz), φ0 = a * T^2 / 12)
+        @test maximum(abs, δθs) < 1e-12
+        @test commands ≈ [f0 + a * (k + 1.5) * T for k in 0:N-1]
+    end
+
+    # Below third order: a constant Doppler. reinit silently ignores a frequency rate,
+    # and the constructors take none.
+    for (F, bandwidth) in ((FirstOrderLF, 2Hz), (SecondOrderBilinearLF, 5Hz), (SecondOrderBoxcarLF, 5Hz))
+        lf = @inferred F(; frequency = f0 * Hz)
+        @test lf == @test_logs reinit(F; frequency = f0 * Hz, frequency_rate = a * Hz / s)
+        @test_throws MethodError F(; frequency = f0 * Hz, frequency_rate = a * Hz / s)
+        @test predict_frequency(lf, 0.1s) == f0 * Hz
+        _, δθs, commands = track_ramp(lf, bandwidth; f0, a = 0.0, T, N, command = f0)
+        @test all(iszero, δθs)
+        @test all(==(f0), commands)
+    end
+
+    # Units are converted into those of the filter states.
+    lf = ThirdOrderBilinearLF(; frequency = 1u"kHz", frequency_rate = 1u"kHz/s")
+    @test lf isa typeof(ThirdOrderBilinearLF())
+    @test lf.x1 ≈ 1000.0Hz && lf.x2 ≈ 1000.0Hz^2
+
+    # reinit keeps the element types and units of a filter.
+    for (lf, has_rate) in (
+        (ThirdOrderBilinearLF(0.0f0Hz, 0.0f0Hz^2), true),
+        (ThirdOrderBoxcarLF(0.0Hz, 0.0Hz / s), true),
+        (ThirdOrderAssistedBilinearLF(0.0f0Hz, 0.0f0Hz^2, 0.0f0u"ms"), true),
+        (SecondOrderBoxcarLF(0.0f0u"kHz"), false),
+        (FirstOrderLF(0.0f0Hz), false),
+    )
+        moved = @inferred reinit(lf; frequency = 1u"kHz", frequency_rate = has_rate ? 5Hz / s : 0Hz / s)
+        @test typeof(moved) == typeof(lf)
+        @test predict_frequency(moved, 0.0s) ≈ 1000Hz
+        @test get_frequency_rate(moved) ≈ (has_rate ? 5Hz / s : 0Hz / s)
+    end
+
+    # Reinitialising from a filter's own estimates moves them, e.g. onto another
+    # reference frequency.
+    lf, = track_ramp(ThirdOrderBoxcarLF(), 10Hz; f0, a, T, N = 5000)
+    moved = @inferred reinit(lf; frequency = predict_frequency(lf, 0.0s) - 30Hz,
+        frequency_rate = get_frequency_rate(lf) - 5Hz / s)
+    for τ in (-T / 2, 0.0, 0.1)
+        @test predict_frequency(moved, τ * s) ≈
+            predict_frequency(lf, τ * s) - 30Hz - 5Hz / s * τ * s
+    end
+    @test filter_loop(moved, 0.0, Δt, 10Hz)[1] ≈
+        filter_loop(lf, 0.0, Δt, 10Hz)[1] - 30Hz - 5Hz / s * 3Δt / 2
 end

@@ -31,6 +31,7 @@ $(TYPEDFIELDS)
 # Example
 ```julia
 lf = ThirdOrderBilinearLF()
+lf = ThirdOrderBilinearLF(; frequency = 1000.0Hz, frequency_rate = 1.0Hz / s)
 output, next_lf = filter_loop(lf, δθ, Δt, bandwidth)
 ```
 """
@@ -62,6 +63,7 @@ $(TYPEDFIELDS)
 # Example
 ```julia
 lf = ThirdOrderAssistedBilinearLF()
+lf = ThirdOrderAssistedBilinearLF(; frequency = 1000.0Hz, frequency_rate = 1.0Hz / s)
 output, next_lf = filter_loop(lf, (δθ_high, δθ_low), Δt, (bandwidth_high, bandwidth_low))
 ```
 """
@@ -87,6 +89,7 @@ $(TYPEDFIELDS)
 # Example
 ```julia
 lf = ThirdOrderBoxcarLF()
+lf = ThirdOrderBoxcarLF(; frequency = 1000.0Hz, frequency_rate = 1.0Hz / s)
 output, next_lf = filter_loop(lf, δθ, Δt, bandwidth)
 ```
 """
@@ -108,31 +111,31 @@ ThirdOrderAssistedBilinearLF(x1, x2) =
 ThirdOrderBoxcarLF(x1, x2) = ThirdOrderBoxcarLF(x1, x2, _unpropagated_integration_time(x1, x2))
 
 """
-    ThirdOrderBilinearLF()
+    ThirdOrderBilinearLF(; frequency = 0.0Hz, frequency_rate = 0.0Hz / s)
 
-Construct a third order bilinear loop filter with zero initial state.
+A third order bilinear loop filter at `frequency`, the frequency at the start of its
+first integration, and `frequency_rate`.
 """
-function ThirdOrderBilinearLF()
-    ThirdOrderBilinearLF(0.0Hz, 0.0Hz^2)
-end
-
-"""
-    ThirdOrderAssistedBilinearLF()
-
-Construct a third order assisted bilinear loop filter with zero initial state.
-"""
-function ThirdOrderAssistedBilinearLF()
-    ThirdOrderAssistedBilinearLF(0.0Hz, 0.0Hz^2)
-end
+ThirdOrderBilinearLF(; frequency = 0.0Hz, frequency_rate = 0.0Hz / s) =
+    ThirdOrderBilinearLF(_as_frequency_state(frequency), _as_frequency_rate_state(frequency_rate))
 
 """
-    ThirdOrderBoxcarLF()
+    ThirdOrderAssistedBilinearLF(; frequency = 0.0Hz, frequency_rate = 0.0Hz / s)
 
-Construct a third order boxcar loop filter with zero initial state.
+A third order assisted bilinear loop filter at `frequency`, the frequency at the start
+of its first integration, and `frequency_rate`.
 """
-function ThirdOrderBoxcarLF()
-    ThirdOrderBoxcarLF(0.0Hz, 0.0Hz^2)
-end
+ThirdOrderAssistedBilinearLF(; frequency = 0.0Hz, frequency_rate = 0.0Hz / s) =
+    ThirdOrderAssistedBilinearLF(_as_frequency_state(frequency), _as_frequency_rate_state(frequency_rate))
+
+"""
+    ThirdOrderBoxcarLF(; frequency = 0.0Hz, frequency_rate = 0.0Hz / s)
+
+A third order boxcar loop filter at `frequency`, the frequency at the start of its
+first integration, and `frequency_rate`.
+"""
+ThirdOrderBoxcarLF(; frequency = 0.0Hz, frequency_rate = 0.0Hz / s) =
+    ThirdOrderBoxcarLF(_as_frequency_state(frequency), _as_frequency_rate_state(frequency_rate))
 
 # The frequency state is the frequency `Δt` (bilinear) or `Δt / 2` (boxcar) after the end
 # of the latest integration of `Δt`.
@@ -197,3 +200,5 @@ get_frequency_rate(state::Union{AbstractThirdOrderLF,AbstractThirdOrderAssistedL
     _in_frequency_rate_units(state.x2)
 
 is_assisted(::Type{<:AbstractThirdOrderAssistedLF}) = true
+
+_estimates_frequency_rate(::Type{<:Union{AbstractThirdOrderLF,AbstractThirdOrderAssistedLF}}) = true
