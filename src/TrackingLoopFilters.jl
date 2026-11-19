@@ -17,9 +17,7 @@ supported.
 - [`ThirdOrderAssistedBilinearLF`](@ref): Third order bilinear loop filter with second order assistance
 
 # Exported Functions
-- [`propagate`](@ref): Propagate the loop filter state
-- [`get_filtered_output`](@ref): Get the filtered output for the current state
-- [`filter_loop`](@ref): Combined propagate and get output in one call
+- [`filter_loop`](@ref): The filtered output and the propagated state
 - [`predict_frequency`](@ref): The filter's frequency estimate at a given time
 - [`get_frequency_rate`](@ref): The filter's frequency rate estimate
 - [`reinit`](@ref): A filter of the same type at a given frequency and frequency rate
@@ -31,8 +29,6 @@ module TrackingLoopFilters
     using Unitful: Hz, s, uconvert
 
     export
-        propagate,
-        get_filtered_output,
         filter_loop,
         predict_frequency,
         get_frequency_rate,
@@ -145,45 +141,20 @@ module TrackingLoopFilters
     get_frequency_rate(state::NoFrequencyRateLF) = _in_frequency_rate_units(zero(state.x) / s)
 
     """
-    $(SIGNATURES)
+        propagate(state, δθ, Δt, bandwidth)
 
-    Propagate the loop filter state.
-
-    Calculate the output with [`get_filtered_output`](@ref) before propagating the state
-    with the same `δθ`, or use [`filter_loop`](@ref), which does both.
-
-    # Arguments
-    - `state`: Current loop filter state
-    - `δθ`: Phase discriminator output, or for the assisted filter a `Tuple` `(δθ_high, δθ_low)`
-    - `Δt`: Integration time
-    - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
-      `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
-
-    # Returns
-    New loop filter state.
+    The second half of [`filter_loop`](@ref), not exported: the state propagated with `δθ`.
+    Call [`get_filtered_output`](@ref) with the same `δθ` first.
     """
     function propagate(state::AbstractLoopFilter, δθ, Δt, bandwidth)
         propagate_state(at_integration_time(state, Δt), δθ, Δt, natural_frequency(state, bandwidth))
     end
 
     """
-    $(SIGNATURES)
+        get_filtered_output(state, δθ, Δt, bandwidth)
 
-    Calculate the filtered output for the current loop filter state.
-
-    Calculate it before [`propagate`](@ref) propagates the state with the same `δθ`, as
-    [`filter_loop`](@ref) does. From the propagated state, the current `δθ` would be
-    integrated twice.
-
-    # Arguments
-    - `state`: Current loop filter state
-    - `δθ`: Phase discriminator output, or for the assisted filter a `Tuple` `(δθ_high, δθ_low)`
-    - `Δt`: Integration time
-    - `bandwidth`: Loop bandwidth, or for the assisted filter a `Tuple`
-      `(bandwidth_high, bandwidth_low)` (see [`ThirdOrderAssistedBilinearLF`](@ref))
-
-    # Returns
-    Filtered frequency estimate.
+    The first half of [`filter_loop`](@ref), not exported: the output for `δθ`. Call it
+    before [`propagate`](@ref) with the same `δθ`.
     """
     function get_filtered_output(state::AbstractLoopFilter, δθ, Δt, bandwidth)
         filtered_output(at_integration_time(state, Δt), δθ, Δt, natural_frequency(state, bandwidth))
@@ -194,9 +165,11 @@ module TrackingLoopFilters
 
     Propagate the loop filter state and return both the filtered output and next state.
 
-    This is a convenience function that combines [`propagate`](@ref) and
-    [`get_filtered_output`](@ref) into a single call. The output is calculated from
-    the current state, before it is propagated with the same `δθ`.
+    The output is calculated from the current state, before it is propagated with the
+    same `δθ`, so the output after the next integration commands the integration after
+    it. A loop filter type defined outside the package defines `natural_frequency`,
+    `propagate_state` and `filtered_output`, and `at_integration_time` if its states
+    refer to a moment that depends on the integration time.
 
     # Arguments
     - `state`: Current loop filter state
