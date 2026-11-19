@@ -17,9 +17,7 @@ supported.
 - [`ThirdOrderAssistedBilinearLF`](@ref): Third order bilinear loop filter with second order assistance
 
 # Exported Functions
-- [`propagate`](@ref): Propagate the loop filter state
-- [`get_filtered_output`](@ref): Get the filtered output for the current state
-- [`filter_loop`](@ref): Combined propagate and get output in one call
+- [`filter_loop`](@ref): The filtered output and the propagated state
 - [`predict_frequency`](@ref): The filter's frequency estimate at a given time
 - [`get_frequency_rate`](@ref): The filter's frequency rate estimate
 - [`reinit`](@ref): A filter of the same type at a given frequency and frequency rate
@@ -32,8 +30,6 @@ module TrackingLoopFilters
     using Unitful: Hz, s, uconvert
 
     export
-        propagate,
-        get_filtered_output,
         filter_loop,
         predict_frequency,
         get_frequency_rate,
@@ -172,10 +168,11 @@ module TrackingLoopFilters
     """
     $(SIGNATURES)
 
-    Propagate the loop filter state.
+    Propagate the loop filter state. Not exported: use [`filter_loop`](@ref), which
+    also calculates the output.
 
     Calculate the output with [`get_filtered_output`](@ref) before propagating the state
-    with the same `δθ`, or use [`filter_loop`](@ref), which does both.
+    with the same `δθ`.
 
     # Arguments
     - `state`: Current loop filter state
@@ -194,7 +191,8 @@ module TrackingLoopFilters
     """
     $(SIGNATURES)
 
-    Calculate the filtered output for the current loop filter state.
+    Calculate the filtered output for the current loop filter state. Not exported: use
+    [`filter_loop`](@ref), which also propagates the state.
 
     Calculate it before [`propagate`](@ref) propagates the state with the same `δθ`, as
     [`filter_loop`](@ref) does. From the propagated state, the current `δθ` would be
@@ -219,9 +217,11 @@ module TrackingLoopFilters
 
     Propagate the loop filter state and return both the filtered output and next state.
 
-    This is a convenience function that combines [`propagate`](@ref) and
-    [`get_filtered_output`](@ref) into a single call. The output is calculated from
-    the current state, before it is propagated with the same `δθ`.
+    The output is calculated from the current state, before it is propagated with the
+    same `δθ`, so the output after the next integration commands the integration after
+    it. A loop filter type defined outside the package defines `natural_frequency`,
+    `propagate_state` and `filtered_output`, and `at_integration_time` if its states
+    refer to a moment that depends on the integration time.
 
     # Arguments
     - `state`: Current loop filter state

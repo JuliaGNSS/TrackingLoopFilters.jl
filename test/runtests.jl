@@ -2,6 +2,7 @@ using Aqua
 using LinearAlgebra
 using Test
 using TrackingLoopFilters
+using TrackingLoopFilters: get_filtered_output, propagate
 
 import Unitful: DimensionError, Hz, s, unit, @u_str
 
