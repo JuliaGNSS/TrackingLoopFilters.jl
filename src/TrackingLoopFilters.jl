@@ -22,7 +22,6 @@ implementations. All filters support Unitful quantities for type-safe calculatio
 module TrackingLoopFilters
 
     using DocStringExtensions
-    using LinearAlgebra
     using Unitful: Hz
 
     export

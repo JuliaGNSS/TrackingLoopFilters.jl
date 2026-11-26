@@ -1,5 +1,4 @@
 using Aqua
-using LinearAlgebra
 using Test
 using TrackingLoopFilters
 
