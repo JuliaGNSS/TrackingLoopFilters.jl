@@ -8,6 +8,9 @@ implementations. The filters take Unitful quantities: frequencies, e.g. in Hz, t
 e.g. in s, and bandwidths in units of frequency. Filtering without units is not
 supported.
 
+Table and figure numbers refer to Kaplan & Hegarty, *Understanding GPS: Principles and
+Applications*, 2nd ed., 2006.
+
 # Exported Types
 - [`FirstOrderLF`](@ref): First order loop filter
 - [`SecondOrderBilinearLF`](@ref): Second order bilinear loop filter
